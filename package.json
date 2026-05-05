@@ -1,0 +1,11 @@
+{
+  "name": "harborgrove-care-mobility",
+  "version": "1.0.0",
+  "description": "Harbor Grove Care & Mobility LLC — NEMT website",
+  "scripts": {
+    "start": "npx serve . -l $PORT"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
