@@ -581,30 +581,122 @@
       .hero-overlay { background: linear-gradient(105deg, rgba(13,43,78,.96) 0%, rgba(13,43,78,.85) 100%); }
       .who-inner, .why-inner, .area-inner { grid-template-columns: 1fr; gap: 40px; }
       .who-image, .why-image { order: -1; }
+      .who-image img { height: 380px; }
+      .why-image img { height: 380px; }
       .steps-grid { grid-template-columns: repeat(2, 1fr); }
       .steps-grid::before { display: none; }
       .footer-grid { grid-template-columns: 1fr 1fr; }
     }
 
     @media (max-width: 768px) {
-      .section { padding: 64px 0; }
-      .section-sm { padding: 48px 0; }
+      .section { padding: 56px 0; }
+      .section-sm { padding: 40px 0; }
+      .section-sub { font-size: 15px; }
+
+      /* top bar — hide right side, center single line */
+      .top-bar { display: none; }
+
+      /* nav */
       .nav-links, .nav-cta { display: none; }
       .hamburger { display: block; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .services-grid { grid-template-columns: 1fr 1fr; }
+      .nav-logo img { height: 52px; }
+      .nav { padding: 12px 0; }
+
+      /* hero */
+      .hero { min-height: 100svh; }
+      .hero-inner { padding: 56px 0 40px; }
+      .hero h1 { font-size: 32px; }
+      .hero-sub { font-size: 15px; margin-bottom: 28px; }
+      .hero-ctas { flex-direction: column; gap: 12px; margin-bottom: 36px; }
+      .hero-ctas .btn-lg { width: 100%; justify-content: center; font-size: 16px; padding: 15px 24px; }
+      .hero-trust { gap: 12px; }
+      .trust-item { font-size: 12px; }
+      .hero-badge { font-size: 10px; letter-spacing: 1px; }
+
+      /* stats */
+      .stats-strip { padding: 20px 0; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .stat-num { font-size: 28px; }
+      .stat-label { font-size: 11px; }
+
+      /* services */
+      .services-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+      .service-card { padding: 24px 18px; }
+      .service-name { font-size: 15px; }
+
+      /* who we serve */
+      .who-image img { height: 280px; }
+      .who-image-badge { font-size: 12px; padding: 10px 14px; bottom: 16px; left: 16px; }
+      .who-item { padding: 14px 16px; }
+
+      /* why us */
+      .why-image img { height: 280px; }
+      .why-image-quote { padding: 14px 16px; bottom: 16px; left: 16px; right: 16px; }
+      .why-image-quote p { font-size: 13px; }
+
+      /* steps */
+      .steps-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+      .step-card { padding: 24px 16px 20px; }
+      .how-cta-bar .btn-lg { width: 100%; justify-content: center; font-size: 15px; padding: 15px 20px; }
+
+      /* testimonials */
       .testimonials-grid { grid-template-columns: 1fr; }
-      .footer-grid { grid-template-columns: 1fr; }
-      .top-bar .container { justify-content: center; }
-      .float-cta { bottom: 18px; right: 18px; }
-      .hero h1 { font-size: 34px; }
-      .hero-sub { font-size: 16px; }
+
+      /* service area */
+      .area-image img { height: 260px; }
+
+      /* cta band */
+      .cta-band { padding: 64px 0; }
+      .cta-inner h2 { font-size: 26px; }
+      .cta-inner p { font-size: 15px; margin-bottom: 32px; }
+      .cta-contacts { flex-direction: column; align-items: stretch; gap: 12px; }
+      .cta-contact-card { min-width: unset; width: 100%; padding: 18px 20px; }
+      .cta-contact-val { font-size: 15px; word-break: break-all; }
+
+      /* footer */
+      .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+      .footer { padding: 52px 0 0; }
+      .footer-bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .footer-bottom-links { flex-wrap: wrap; gap: 16px; }
+
+      /* float */
+      .float-cta { bottom: 16px; right: 16px; }
     }
 
     @media (max-width: 480px) {
+      .container { padding: 0 16px; }
+      .section { padding: 48px 0; }
+
       .services-grid { grid-template-columns: 1fr; }
       .steps-grid { grid-template-columns: 1fr; }
-      .cta-contacts { flex-direction: column; align-items: center; }
+
+      .hero h1 { font-size: 28px; }
+      .hero-badge { padding: 6px 12px; }
+
+      .stat-num { font-size: 24px; }
+
+      .service-card { padding: 22px 16px; }
+
+      .who-inner, .why-inner, .area-inner { gap: 28px; }
+      .who-image img { height: 240px; }
+      .why-image img { height: 240px; }
+
+      .why-feature { gap: 12px; }
+      .why-feature-icon { width: 44px; height: 44px; flex-shrink: 0; }
+
+      .testimonial-card { padding: 24px 20px; }
+
+      .footer-brand img { height: 48px; }
+      .footer-brand p { font-size: 13px; }
+    }
+
+    /* disable hover transforms on touch to prevent sticky states */
+    @media (hover: none) {
+      .service-card:hover,
+      .step-card:hover,
+      .who-item:hover,
+      .float-btn:hover { transform: none; }
+      .service-card:hover::before { transform: scaleX(0); }
     }
   </style>
 </head>
