@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 const titles: Record<string, string> = {
   "/": "Dashboard",
@@ -32,8 +33,17 @@ export function Topbar({ userName }: { userName?: string | null }) {
         >
           🔔
         </Link>
-        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-          {userName?.[0]?.toUpperCase() ?? "U"}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+            {userName?.[0]?.toUpperCase() ?? "U"}
+          </div>
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-100 transition-colors"
+            title="Sign out"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </header>
