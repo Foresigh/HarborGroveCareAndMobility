@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { RideStatus } from "@/app/generated/prisma";
+import { RideStatus } from "@/lib/generated/prisma";
 
 async function getStats() {
   const today = new Date();
