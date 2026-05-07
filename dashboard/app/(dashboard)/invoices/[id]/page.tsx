@@ -85,18 +85,15 @@ export default function InvoiceDetailPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="bg-[#0D2B4E] px-8 py-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <img src="/logo.png" alt="Harbor Grove Care & Mobility" style={{ width: 220, height: "auto", marginBottom: 10 }} />
-              <div className="text-slate-400 text-sm mt-1">Non-Emergency Medical Transportation</div>
-              <div className="text-slate-400 text-xs mt-0.5">Meridian, ID 83642 · 208-297-3601</div>
-            </div>
+        <div className="bg-[#0D2B4E] px-8 py-4">
+          <div className="flex items-center justify-between">
+            <img src="/logo.png" alt="Harbor Grove Care & Mobility" style={{ width: 180, height: "auto", filter: "brightness(0) invert(1)" }} />
             <div className="text-right">
               <div className="text-slate-400 text-xs uppercase tracking-wide">Invoice</div>
               <div className="text-white font-bold text-2xl">{invoice.invoiceNum}</div>
             </div>
           </div>
+          <div className="mt-3 text-slate-400 text-xs">Non-Emergency Medical Transportation · Meridian, ID 83642 · 208-297-3601</div>
         </div>
 
         <div className="px-8 py-6">
