@@ -88,7 +88,7 @@ export default function InvoiceDetailPage() {
         <div className="bg-[#0D2B4E] px-8 py-6">
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-white font-bold text-xl">Harbor Grove Care & Mobility</div>
+              <img src="/logo-white.svg" alt="Harbor Grove Care & Mobility" style={{ height: 48, width: "auto", marginBottom: 8 }} />
               <div className="text-slate-400 text-sm mt-1">Non-Emergency Medical Transportation</div>
               <div className="text-slate-400 text-xs mt-0.5">Meridian, ID 83642 · 208-297-3601</div>
             </div>
