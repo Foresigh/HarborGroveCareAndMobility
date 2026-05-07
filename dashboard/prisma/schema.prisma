@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  DISPATCHER
+  DRIVER
+}
+
+enum RideStatus {
+  SCHEDULED
+  EN_ROUTE
+  PICKED_UP
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum RideType {
+  WHEELCHAIR
+  STRETCHER
+  AMBULATORY
+  BARIATRIC
+}
+
+enum BillingType {
+  MEDICAID
+  PRIVATE_PAY
+  FACILITY
+  THIRD_PARTY
+}
+
+enum ClaimStatus {
+  PENDING
+  SUBMITTED
+  PAID
+  DENIED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(DISPATCHER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id             String      @id @default(cuid())
+  firstName      String
+  lastName       String
+  dob            DateTime?
+  phone          String
+  email          String?
+  address        String?
+  city           String?
+  state          String      @default("ID")
+  zip            String?
+  insuranceId    String?
+  medicaidId     String?
+  billingType    BillingType @default(MEDICAID)
+  mobilityNeeds  String?
+  specialNotes   String?
+  emergencyName  String?
+  emergencyPhone String?
+  active         Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  rides          Ride[]
+  invoices       Invoice[]
+}
+
+model Driver {
+  id         String   @id @default(cuid())
+  firstName  String
+  lastName   String
+  phone      String
+  email      String?
+  licenseNum String?
+  status     String   @default("AVAILABLE")
+  vehicleId  String?
+  vehicle    Vehicle? @relation(fields: [vehicleId], references: [id])
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  rides      Ride[]
+}
+
+model Vehicle {
+  id        String   @id @default(cuid())
+  name      String
+  make      String?
+  model     String?
+  year      Int?
+  plate     String?
+  type      RideType @default(AMBULATORY)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  drivers   Driver[]
+  rides     Ride[]
+}
+
+model Ride {
+  id              String      @id @default(cuid())
+  clientId        String
+  client          Client      @relation(fields: [clientId], references: [id])
+  driverId        String?
+  driver          Driver?     @relation(fields: [driverId], references: [id])
+  vehicleId       String?
+  vehicle         Vehicle?    @relation(fields: [vehicleId], references: [id])
+  pickupAddress   String
+  dropoffAddress  String
+  scheduledAt     DateTime
+  pickedUpAt      DateTime?
+  completedAt     DateTime?
+  status          RideStatus  @default(SCHEDULED)
+  rideType        RideType    @default(AMBULATORY)
+  billingType     BillingType @default(MEDICAID)
+  providerName    String?
+  providerAddress String?
+  notes           String?
+  amount          Decimal?    @db.Decimal(10, 2)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  billingClaim    BillingClaim?
+  invoiceItems    InvoiceItem[]
+}
+
+model BillingClaim {
+  id           String      @id @default(cuid())
+  rideId       String      @unique
+  ride         Ride        @relation(fields: [rideId], references: [id])
+  payer        BillingType
+  claimNumber  String?
+  status       ClaimStatus @default(PENDING)
+  amount       Decimal?    @db.Decimal(10, 2)
+  submittedAt  DateTime?
+  paidAt       DateTime?
+  denialReason String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Invoice {
+  id         String        @id @default(cuid())
+  invoiceNum String        @unique
+  clientId   String
+  client     Client        @relation(fields: [clientId], references: [id])
+  status     InvoiceStatus @default(DRAFT)
+  issueDate  DateTime      @default(now())
+  dueDate    DateTime
+  subtotal   Decimal       @db.Decimal(10, 2)
+  tax        Decimal       @default(0) @db.Decimal(10, 2)
+  total      Decimal       @db.Decimal(10, 2)
+  notes      String?
+  sentAt     DateTime?
+  paidAt     DateTime?
+  items      InvoiceItem[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  rideId      String?
+  ride        Ride?    @relation(fields: [rideId], references: [id])
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  total       Decimal  @db.Decimal(10, 2)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("INFO")
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
