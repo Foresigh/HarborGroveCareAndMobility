@@ -1007,6 +1007,10 @@
                     <label class="form-label" for="date">Appointment Date *</label>
                     <input class="form-input" id="date" name="date" type="date" required />
                   </div>
+                  <div class="form-group">
+                    <label class="form-label" for="time">Pickup Time *</label>
+                    <input class="form-input" id="time" name="time" type="time" required />
+                  </div>
                   <div class="form-group full">
                     <label class="form-label" for="pickup">Pickup Address *</label>
                     <input class="form-input" id="pickup" name="pickup" type="text" placeholder="123 Main St, Boise, ID" required />
@@ -1302,14 +1306,37 @@
     });
 
     // Form submission
-    function submitForm(e) {
+    async function submitForm(e) {
       e.preventDefault();
       const form = document.getElementById('rideForm');
+      const btn = form.querySelector('.form-submit');
       const data = new FormData(form);
-      const mailto = `mailto:harborgrovecare@gmail.com?subject=New Ride Request — ${data.get('fname')} ${data.get('lname')}&body=Name: ${data.get('fname')} ${data.get('lname')}%0APhone: ${data.get('phone')}%0ADate: ${data.get('date')}%0APickup: ${data.get('pickup')}%0ADestination: ${data.get('destination')}%0AMobility: ${data.get('mobility')}%0ANotes: ${data.get('notes')}`;
-      window.location.href = mailto;
-      document.getElementById('formContent').style.display = 'none';
-      document.getElementById('formSuccess').classList.add('show');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+      try {
+        const res = await fetch('https://harborgrovecareandmobility-production-28be.up.railway.app/api/rides/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName: data.get('fname'),
+            lastName: data.get('lname'),
+            phone: data.get('phone'),
+            date: data.get('date'),
+            time: data.get('time'),
+            pickup: data.get('pickup'),
+            destination: data.get('destination'),
+            mobility: data.get('mobility'),
+            notes: data.get('notes'),
+          }),
+        });
+        if (!res.ok) throw new Error('Server error');
+        document.getElementById('formContent').style.display = 'none';
+        document.getElementById('formSuccess').classList.add('show');
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1C9.61 21 3 14.39 3 6a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.58a1 1 0 01-.25 1.01l-2.2 2.2z"/></svg> Submit Ride Request';
+        alert('Something went wrong. Please call us at 208-297-3601.');
+      }
     }
   </script>
 </body>
