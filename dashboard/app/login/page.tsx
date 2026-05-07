@@ -3,7 +3,6 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,7 +29,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#0D2B4E]">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8 gap-3">
-          <Image src="/logo.png" alt="Harbor Grove Care & Mobility" width={200} height={80} className="object-contain brightness-0 invert" priority />
+          <img src="/logo-white.svg" alt="Harbor Grove Care & Mobility" style={{ height: 52, width: "auto" }} />
           <div className="text-slate-400 text-sm">Operations Dashboard</div>
         </div>
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-2xl p-8 space-y-5">
