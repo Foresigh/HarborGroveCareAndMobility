@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
+import { SignOutButton } from "@/components/sign-out-button";
 
 export default async function DashboardLayout({
   children,
@@ -17,7 +18,7 @@ export default async function DashboardLayout({
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Topbar userName={session.user?.name} />
+        <Topbar userName={session.user?.name} signOutButton={<SignOutButton />} />
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>

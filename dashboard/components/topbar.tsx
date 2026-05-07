@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import type { ReactNode } from "react";
 
 const titles: Record<string, string> = {
   "/": "Dashboard",
@@ -15,7 +15,7 @@ const titles: Record<string, string> = {
   "/notifications": "Notifications",
 };
 
-export function Topbar({ userName }: { userName?: string | null }) {
+export function Topbar({ userName, signOutButton }: { userName?: string | null; signOutButton?: ReactNode }) {
   const path = usePathname();
   const title =
     Object.entries(titles)
@@ -37,13 +37,7 @@ export function Topbar({ userName }: { userName?: string | null }) {
           <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
             {userName?.[0]?.toUpperCase() ?? "U"}
           </div>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-100 transition-colors"
-            title="Sign out"
-          >
-            Sign out
-          </button>
+          {signOutButton}
         </div>
       </div>
     </header>
