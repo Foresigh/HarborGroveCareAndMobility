@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { RideStatus } from "@/lib/generated/prisma/enums";
+import { DateFilter } from "./DateFilter";
 
 const statusColor: Record<RideStatus, string> = {
   SCHEDULED: "bg-blue-100 text-blue-700",
@@ -65,14 +66,7 @@ export default async function RideBoardPage({
           ))}
         </div>
         <div className="flex gap-2">
-          <input
-            type="date"
-            defaultValue={params.date ?? today.toISOString().split("T")[0]}
-            onChange={(e) => {
-              window.location.href = `/rides?date=${e.target.value}${params.status ? `&status=${params.status}` : ""}`;
-            }}
-            className="border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <DateFilter defaultValue={params.date ?? today.toISOString().split("T")[0]} status={params.status} />
           <Link
             href="/rides/new"
             className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors"
