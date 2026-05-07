@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { RideStatus } from "@/lib/generated/prisma";
+import { RideStatus } from "@/lib/generated/prisma/enums";
 
 const statusColor: Record<RideStatus, string> = {
   SCHEDULED: "bg-blue-100 text-blue-700",

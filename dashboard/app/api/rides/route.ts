@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { RideStatus, RideType, BillingType } from "@/lib/generated/prisma";
+import { RideStatus, RideType, BillingType } from "@/lib/generated/prisma/enums";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);

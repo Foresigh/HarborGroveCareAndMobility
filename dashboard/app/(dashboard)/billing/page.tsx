@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ClaimStatus } from "@/lib/generated/prisma";
+import { ClaimStatus } from "@/lib/generated/prisma/enums";
 
 const statusColor: Record<ClaimStatus, string> = {
   PENDING: "bg-amber-100 text-amber-700",

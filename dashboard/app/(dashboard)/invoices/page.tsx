@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { InvoiceStatus } from "@/lib/generated/prisma";
+import { InvoiceStatus } from "@/lib/generated/prisma/enums";
 
 const statusColor: Record<InvoiceStatus, string> = {
   DRAFT: "bg-slate-100 text-slate-600",
