@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const nav = [
   { href: "/", label: "Dashboard", icon: "⊞" },
@@ -20,9 +21,9 @@ export function Sidebar() {
   const path = usePathname();
   return (
     <aside className="w-60 shrink-0 bg-[#0D2B4E] flex flex-col h-full">
-      <div className="px-6 py-5 border-b border-white/10">
-        <div className="text-white font-bold text-lg leading-tight">Harbor Grove</div>
-        <div className="text-slate-400 text-xs">Operations Dashboard</div>
+      <div className="px-6 py-5 border-b border-white/10 flex flex-col gap-1">
+        <Image src="/logo-white.svg" alt="Harbor Grove Care & Mobility" width={160} height={48} className="object-contain" priority />
+        <div className="text-slate-400 text-xs mt-1">Operations Dashboard</div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
