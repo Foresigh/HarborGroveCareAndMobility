@@ -22,7 +22,7 @@ export function Sidebar() {
   return (
     <aside className="w-60 shrink-0 bg-[#0D2B4E] flex flex-col h-full">
       <div className="px-6 py-5 border-b border-white/10 flex flex-col gap-1">
-        <Image src="/logo-white.svg" alt="Harbor Grove Care & Mobility" width={160} height={48} className="object-contain" priority />
+        <Image src="/logo.png" alt="Harbor Grove Care & Mobility" width={160} height={60} className="object-contain brightness-0 invert" priority />
         <div className="text-slate-400 text-xs mt-1">Operations Dashboard</div>
       </div>
 

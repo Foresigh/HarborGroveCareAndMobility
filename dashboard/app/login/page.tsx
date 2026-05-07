@@ -30,7 +30,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#0D2B4E]">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8 gap-3">
-          <Image src="/logo-white.svg" alt="Harbor Grove Care & Mobility" width={180} height={60} className="object-contain" priority />
+          <Image src="/logo.png" alt="Harbor Grove Care & Mobility" width={200} height={80} className="object-contain brightness-0 invert" priority />
           <div className="text-slate-400 text-sm">Operations Dashboard</div>
         </div>
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-2xl p-8 space-y-5">
