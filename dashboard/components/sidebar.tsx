@@ -4,16 +4,31 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
+const GOLD = "#F9A825";
+
+const icons: Record<string, JSX.Element> = {
+  dashboard: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>,
+  rides: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.08 3.11H5.77L6.85 7zM19 17H5v-5h14v5z"/><circle cx="7.5" cy="14.5" r="1.5"/><circle cx="16.5" cy="14.5" r="1.5"/></svg>,
+  new: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>,
+  clients: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>,
+  drivers: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>,
+  billing: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>,
+  invoices: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>,
+  calendar: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>,
+  notifications: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>,
+  signout: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>,
+};
+
 const nav = [
-  { href: "/", label: "Dashboard", icon: "⊞" },
-  { href: "/rides", label: "Ride Board", icon: "🚐" },
-  { href: "/rides/new", label: "Book a Ride", icon: "＋" },
-  { href: "/clients", label: "Clients", icon: "👤" },
-  { href: "/drivers", label: "Drivers", icon: "🪪" },
-  { href: "/billing", label: "Billing Queue", icon: "💳" },
-  { href: "/invoices", label: "Invoices", icon: "🧾" },
-  { href: "/calendar", label: "Calendar", icon: "📅" },
-  { href: "/notifications", label: "Notifications", icon: "🔔" },
+  { href: "/", label: "Dashboard", icon: "dashboard" },
+  { href: "/rides", label: "Ride Board", icon: "rides" },
+  { href: "/rides/new", label: "Book a Ride", icon: "new" },
+  { href: "/clients", label: "Clients", icon: "clients" },
+  { href: "/drivers", label: "Drivers", icon: "drivers" },
+  { href: "/billing", label: "Billing Queue", icon: "billing" },
+  { href: "/invoices", label: "Invoices", icon: "invoices" },
+  { href: "/calendar", label: "Calendar", icon: "calendar" },
+  { href: "/notifications", label: "Notifications", icon: "notifications" },
 ];
 
 export function Sidebar() {
@@ -42,7 +57,7 @@ export function Sidebar() {
                   : "text-slate-400 hover:bg-white/5 hover:text-white"
               )}
             >
-              <span className="text-base">{item.icon}</span>
+              <span style={{ color: GOLD, flexShrink: 0 }}>{icons[item.icon]}</span>
               {item.label}
             </Link>
           );
@@ -54,7 +69,8 @@ export function Sidebar() {
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
         >
-          <span>🚪</span> Sign out
+          <span style={{ color: GOLD, flexShrink: 0 }}>{icons.signout}</span>
+          Sign out
         </button>
       </div>
     </aside>
