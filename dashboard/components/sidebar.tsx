@@ -37,7 +37,7 @@ export function Sidebar() {
   return (
     <aside className="w-60 shrink-0 bg-[#0D2B4E] flex flex-col h-full">
       <div className="px-6 py-5 border-b border-white/10 flex flex-col gap-1">
-        <img src="/logo.png" alt="Harbor Grove Care & Mobility" style={{ width: 148, height: "auto", display: "block", filter: "brightness(0) invert(1)" }} />
+        <img src="/logo.png" alt="Harbor Grove Care & Mobility" style={{ width: 148, height: "auto", display: "block", filter: "drop-shadow(0 1px 6px rgba(255,255,255,0.2)) brightness(1.4)" }} />
         <div className="text-slate-400 text-xs mt-1">Operations Dashboard</div>
       </div>
 

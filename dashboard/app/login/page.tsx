@@ -88,7 +88,7 @@ export default function LoginPage() {
         >
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <Image src={logo} alt="Harbor Grove Care & Mobility" width={200} height={68} className="object-contain" style={{ filter: "brightness(0) invert(1)" }} priority />
+            <Image src={logo} alt="Harbor Grove Care & Mobility" width={200} height={68} className="object-contain" style={{ filter: "drop-shadow(0 2px 8px rgba(255,255,255,0.25))" }} priority />
             <div className="mt-5 text-center">
               <h1 className="text-white text-2xl font-bold">Welcome back</h1>
               <p className="text-white/50 text-sm mt-1">Sign in to manage your operations</p>
