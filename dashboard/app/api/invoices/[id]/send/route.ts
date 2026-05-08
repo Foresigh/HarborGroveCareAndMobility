@@ -1,19 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT ?? 587),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(
   _req: Request,
@@ -27,7 +16,7 @@ export async function POST(
   });
 
   if (!invoice) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (!invoice.client.email) return NextResponse.json({ error: "Client has no email" }, { status: 400 });
+  if (!invoice.client.email) return NextResponse.json({ error: "Client has no email address on file" }, { status: 400 });
 
   const itemRows = invoice.items
     .map(
@@ -48,21 +37,21 @@ export async function POST(
         <p style="color:rgba(255,255,255,.6);margin:4px 0 0;font-size:13px;">Non-Emergency Medical Transportation</p>
       </div>
       <div style="padding:32px 40px;">
+        <div style="margin-bottom:24px;">
+          <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;">Invoice</div>
+          <div style="font-size:22px;font-weight:700;color:#0D2B4E;">${invoice.invoiceNum}</div>
+        </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:24px;">
           <div>
-            <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;">Invoice</div>
-            <div style="font-size:22px;font-weight:700;color:#0D2B4E;">${invoice.invoiceNum}</div>
+            <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Bill To</div>
+            <div style="font-weight:600;color:#1a1a2e;">${invoice.client.firstName} ${invoice.client.lastName}</div>
+            <div style="color:#555;font-size:14px;">${invoice.client.email}</div>
+            <div style="color:#555;font-size:14px;">${invoice.client.phone}</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:12px;color:#888;">Issue Date: ${invoice.issueDate.toLocaleDateString()}</div>
-            <div style="font-size:12px;color:#888;">Due Date: ${invoice.dueDate.toLocaleDateString()}</div>
+            <div style="font-size:12px;color:#888;margin-bottom:4px;">Issue Date: <strong>${invoice.issueDate.toLocaleDateString()}</strong></div>
+            <div style="font-size:12px;color:#888;">Due Date: <strong>${invoice.dueDate.toLocaleDateString()}</strong></div>
           </div>
-        </div>
-        <div style="margin-bottom:24px;">
-          <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Bill To</div>
-          <div style="font-weight:600;color:#1a1a2e;">${invoice.client.firstName} ${invoice.client.lastName}</div>
-          <div style="color:#555;font-size:14px;">${invoice.client.email}</div>
-          <div style="color:#555;font-size:14px;">${invoice.client.phone}</div>
         </div>
         <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
           <thead>
@@ -76,14 +65,14 @@ export async function POST(
           <tbody>${itemRows}</tbody>
           <tfoot>
             <tr>
-              <td colspan="3" style="padding:12px;text-align:right;font-weight:700;color:#0D2B4E;">Total Due</td>
-              <td style="padding:12px;text-align:right;font-weight:700;font-size:18px;color:#0D2B4E;">$${Number(invoice.total).toFixed(2)}</td>
+              <td colspan="3" style="padding:12px;text-align:right;font-weight:700;color:#0D2B4E;border-top:2px solid #e2e8f0;">Total Due</td>
+              <td style="padding:12px;text-align:right;font-weight:700;font-size:18px;color:#0D2B4E;border-top:2px solid #e2e8f0;">$${Number(invoice.total).toFixed(2)}</td>
             </tr>
           </tfoot>
         </table>
         ${invoice.notes ? `<div style="background:#f8fafc;border-radius:8px;padding:16px;margin-bottom:24px;font-size:14px;color:#555;">${invoice.notes}</div>` : ""}
-        <div style="font-size:13px;color:#888;text-align:center;">
-          Questions? Contact us at <a href="tel:2082973601" style="color:#1565C0;">208-297-3601</a> or <a href="mailto:harborgrovecare@gmail.com" style="color:#1565C0;">harborgrovecare@gmail.com</a>
+        <div style="font-size:13px;color:#888;text-align:center;padding-top:16px;border-top:1px solid #eee;">
+          Questions? Call <a href="tel:2082973601" style="color:#0D2B4E;">208-297-3601</a> or email <a href="mailto:harborgrovecare@gmail.com" style="color:#0D2B4E;">harborgrovecare@gmail.com</a>
         </div>
       </div>
       <div style="background:#0D2B4E;padding:20px 40px;text-align:center;">
@@ -92,17 +81,16 @@ export async function POST(
     </div>
   `;
 
-  try {
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM,
-      to: invoice.client.email,
-      subject: `Invoice ${invoice.invoiceNum} — Harbor Grove Care & Mobility`,
-      html,
-    });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "SMTP error";
-    console.error("sendMail error:", err);
-    return NextResponse.json({ error: message }, { status: 500 });
+  const { error } = await resend.emails.send({
+    from: process.env.RESEND_FROM ?? "Harbor Grove Care & Mobility <onboarding@resend.dev>",
+    to: invoice.client.email,
+    subject: `Invoice ${invoice.invoiceNum} — Harbor Grove Care & Mobility`,
+    html,
+  });
+
+  if (error) {
+    console.error("Resend error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   await prisma.invoice.update({
