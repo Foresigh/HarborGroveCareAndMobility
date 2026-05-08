@@ -10,6 +10,9 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
 });
 
 export async function POST(
@@ -89,12 +92,18 @@ export async function POST(
     </div>
   `;
 
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM,
-    to: invoice.client.email,
-    subject: `Invoice ${invoice.invoiceNum} — Harbor Grove Care & Mobility`,
-    html,
-  });
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to: invoice.client.email,
+      subject: `Invoice ${invoice.invoiceNum} — Harbor Grove Care & Mobility`,
+      html,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "SMTP error";
+    console.error("sendMail error:", err);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 
   await prisma.invoice.update({
     where: { id },
