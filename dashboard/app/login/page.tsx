@@ -3,15 +3,16 @@ import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Image from "next/image";
+import bg1 from "./images/bg1.jpg";
+import bg2 from "./images/bg2.jpg";
+import bg3 from "./images/bg3.jpg";
+import bg4 from "./images/bg4.png";
+import bg5 from "./images/bg5.jpg";
+import bg6 from "./images/bg6.jpg";
+import logo from "./images/logo.png";
 
-const SLIDES = [
-  "/bg-1.jpg",
-  "/bg-2.jpg",
-  "/bg-3.jpg",
-  "/bg-4.png",
-  "/bg-5.jpg",
-  "/bg-6.jpg",
-];
+const SLIDES = [bg1, bg2, bg3, bg4, bg5, bg6];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,17 +48,14 @@ export default function LoginPage() {
 
       {/* Slide images */}
       {SLIDES.map((src, i) => (
-        <img
-          key={src}
+        <Image
+          key={i}
           src={src}
           alt=""
-          aria-hidden
-          className="absolute inset-0 w-full h-full object-cover object-center"
-          style={{
-            opacity: i === current ? 1 : 0,
-            transition: "opacity 1.2s ease-in-out",
-            zIndex: 0,
-          }}
+          fill
+          className="object-cover object-center"
+          style={{ opacity: i === current ? 1 : 0, transition: "opacity 1.2s ease-in-out", zIndex: 0 }}
+          priority={i === 0}
         />
       ))}
 
@@ -65,17 +63,13 @@ export default function LoginPage() {
       <div className="absolute inset-0" style={{ background: "rgba(13,43,78,0.65)", zIndex: 1 }} />
 
       {/* Dot indicators */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2" style={{ zIndex: 2 }}>
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2" style={{ zIndex: 3 }}>
         {SLIDES.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
             className="rounded-full transition-all duration-300"
-            style={{
-              width: i === current ? 20 : 8,
-              height: 8,
-              background: i === current ? "#F9A825" : "rgba(255,255,255,0.4)",
-            }}
+            style={{ width: i === current ? 20 : 8, height: 8, background: i === current ? "#F9A825" : "rgba(255,255,255,0.4)" }}
           />
         ))}
       </div>
@@ -92,14 +86,9 @@ export default function LoginPage() {
             boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
           }}
         >
-          {/* Logo */}
           <div className="flex flex-col items-center gap-2 pb-2">
             <div className="bg-white rounded-xl px-5 py-3">
-              <img
-                src="/logo.png"
-                alt="Harbor Grove Care & Mobility"
-                style={{ width: 160, height: "auto", display: "block" }}
-              />
+              <Image src={logo} alt="Harbor Grove Care & Mobility" width={160} height={54} className="object-contain" priority />
             </div>
             <p className="text-white/60 text-xs tracking-widest uppercase mt-1">Operations Dashboard</p>
           </div>
