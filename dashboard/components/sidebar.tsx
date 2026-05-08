@@ -17,6 +17,7 @@ const icons: Record<string, ReactElement> = {
   invoices: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>,
   calendar: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>,
   notifications: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>,
+  analytics: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>,
   signout: <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>,
 };
 
@@ -30,6 +31,7 @@ const nav = [
   { href: "/invoices", label: "Invoices", icon: "invoices" },
   { href: "/calendar", label: "Calendar", icon: "calendar" },
   { href: "/notifications", label: "Notifications", icon: "notifications" },
+  { href: "/analytics", label: "Analytics", icon: "analytics" },
 ];
 
 export function Sidebar() {
@@ -37,7 +39,7 @@ export function Sidebar() {
   return (
     <aside className="w-60 shrink-0 bg-[#0D2B4E] flex flex-col h-full">
       <div className="px-6 py-5 border-b border-white/10 flex flex-col gap-1">
-        <img src="/logo.png" alt="Harbor Grove Care & Mobility" style={{ width: 148, height: "auto", display: "block", filter: "drop-shadow(0 1px 6px rgba(255,255,255,0.2)) brightness(1.4)" }} />
+        <img src="/logo-white.svg" alt="Harbor Grove Care & Mobility" style={{ width: 148, height: "auto", display: "block" }} />
         <div className="text-slate-400 text-xs mt-1">Operations Dashboard</div>
       </div>
 
