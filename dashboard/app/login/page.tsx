@@ -17,15 +17,13 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [current, setCurrent] = useState(0);
-  const [prev, setPrev] = useState<number | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setPrev(current);
       setCurrent((c) => (c + 1) % SLIDES.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [current]);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,36 +45,43 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen flex items-center justify-end overflow-hidden">
 
-      {/* Slider backgrounds */}
+      {/* Slide images */}
       {SLIDES.map((src, i) => (
-        <div
+        <img
           key={src}
-          className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+          src={src}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-cover object-center"
           style={{
-            backgroundImage: `url('${src}')`,
-            opacity: i === current ? 1 : i === prev ? 0 : 0,
-            zIndex: i === current ? 1 : i === prev ? 0 : 0,
+            opacity: i === current ? 1 : 0,
+            transition: "opacity 1.2s ease-in-out",
+            zIndex: 0,
           }}
         />
       ))}
 
       {/* Dark overlay */}
-      <div className="absolute inset-0 bg-[#0D2B4E]/65" style={{ zIndex: 2 }} />
+      <div className="absolute inset-0" style={{ background: "rgba(13,43,78,0.65)", zIndex: 1 }} />
 
-      {/* Slide dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2" style={{ zIndex: 3 }}>
+      {/* Dot indicators */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2" style={{ zIndex: 2 }}>
         {SLIDES.map((_, i) => (
           <button
             key={i}
-            onClick={() => { setPrev(current); setCurrent(i); }}
-            className="w-2 h-2 rounded-full transition-all"
-            style={{ background: i === current ? "#F9A825" : "rgba(255,255,255,0.4)" }}
+            onClick={() => setCurrent(i)}
+            className="rounded-full transition-all duration-300"
+            style={{
+              width: i === current ? 20 : 8,
+              height: 8,
+              background: i === current ? "#F9A825" : "rgba(255,255,255,0.4)",
+            }}
           />
         ))}
       </div>
 
       {/* Login card */}
-      <div className="relative w-full max-w-sm mx-6 md:mr-20" style={{ zIndex: 3 }}>
+      <div className="relative w-full max-w-sm mx-6 md:mr-20" style={{ zIndex: 2 }}>
         <div
           className="rounded-2xl p-8 space-y-5"
           style={{
@@ -89,7 +94,7 @@ export default function LoginPage() {
         >
           {/* Logo */}
           <div className="flex flex-col items-center gap-2 pb-2">
-            <div className="bg-white rounded-xl px-4 py-3">
+            <div className="bg-white rounded-xl px-5 py-3">
               <img
                 src="/logo.png"
                 alt="Harbor Grove Care & Mobility"
@@ -125,7 +130,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg text-sm font-bold transition-all disabled:opacity-60 hover:brightness-110"
+              className="w-full py-2.5 rounded-lg text-sm font-bold transition-all disabled:opacity-60"
               style={{ background: "#F9A825", color: "#0D2B4E" }}
             >
               {loading ? "Signing in…" : "Sign In"}
