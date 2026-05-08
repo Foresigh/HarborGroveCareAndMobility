@@ -99,17 +99,18 @@ export default async function DashboardHome() {
           <h2 className="font-semibold text-slate-800 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { href: "/rides/new", label: "Book a Ride", icon: "🚐", bg: "bg-blue-50 hover:bg-blue-100 text-blue-700" },
-              { href: "/clients/new", label: "Add Client", icon: "👤", bg: "bg-violet-50 hover:bg-violet-100 text-violet-700" },
-              { href: "/invoices/new", label: "Create Invoice", icon: "🧾", bg: "bg-emerald-50 hover:bg-emerald-100 text-emerald-700" },
-              { href: "/billing", label: "Billing Queue", icon: "💳", bg: "bg-orange-50 hover:bg-orange-100 text-orange-700" },
+              { href: "/rides/new", label: "Book a Ride", icon: <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.08 3.11H5.77L6.85 7zM19 17H5v-5h14v5z"/><circle cx="7.5" cy="14.5" r="1.5"/><circle cx="16.5" cy="14.5" r="1.5"/></svg> },
+              { href: "/clients/new", label: "Add Client", icon: <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> },
+              { href: "/invoices/new", label: "Create Invoice", icon: <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> },
+              { href: "/billing", label: "Billing Queue", icon: <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg> },
             ].map((a) => (
               <Link
                 key={a.href}
                 href={a.href}
-                className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${a.bg}`}
+                className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-slate-100 bg-slate-50 hover:border-[#F9A825] hover:bg-white text-slate-700 hover:text-[#0D2B4E] text-sm font-medium transition-all group"
               >
-                <span>{a.icon}</span> {a.label}
+                <span className="text-slate-400 group-hover:text-[#F9A825] transition-colors">{a.icon}</span>
+                {a.label}
               </Link>
             ))}
           </div>
