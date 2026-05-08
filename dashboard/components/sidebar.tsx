@@ -67,7 +67,7 @@ export function Sidebar() {
 
       <div className="px-3 py-4 border-t border-white/10">
         <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
         >
           <span style={{ color: GOLD, flexShrink: 0 }}>{icons.signout}</span>
