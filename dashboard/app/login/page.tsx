@@ -10,6 +10,7 @@ import bg3 from "./images/bg3.jpg";
 import bg4 from "./images/bg4.png";
 import bg5 from "./images/bg5.jpg";
 import bg6 from "./images/bg6.jpg";
+import logo from "./images/logo.png";
 
 const SLIDES = [bg1, bg2, bg3, bg4, bg5, bg6];
 
@@ -87,11 +88,9 @@ export default function LoginPage() {
         >
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <img
-              src="/logo-white.svg"
-              alt="Harbor Grove Care & Mobility"
-              style={{ width: 200, height: "auto", display: "block" }}
-            />
+            <div className="bg-white rounded-2xl px-5 py-3">
+              <Image src={logo} alt="Harbor Grove Care & Mobility" width={170} height={58} className="object-contain" priority />
+            </div>
             <div className="mt-5 text-center">
               <h1 className="text-white text-2xl font-bold">Welcome back</h1>
               <p className="text-white/50 text-sm mt-1">Sign in to manage your operations</p>
