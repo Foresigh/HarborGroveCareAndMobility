@@ -3,6 +3,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,33 +27,45 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      className="relative min-h-screen flex items-center justify-end bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: "url('/nemt-van.png')" }}
-    >
-      {/* dark overlay */}
+    <div className="relative min-h-screen flex items-center justify-end overflow-hidden">
+
+      {/* Background image */}
+      <Image
+        src="/nemt-van.png"
+        alt=""
+        fill
+        className="object-cover object-center"
+        priority
+      />
+
+      {/* Dark overlay */}
       <div className="absolute inset-0 bg-[#0D2B4E]/65" />
 
-      {/* login card — right side */}
-      <div className="relative z-10 w-full max-w-sm mr-8 md:mr-16 lg:mr-24">
+      {/* Login card */}
+      <div className="relative z-10 w-full max-w-sm mx-6 md:mr-20">
         <div
-          className="rounded-2xl p-8 space-y-6"
+          className="rounded-2xl p-8 space-y-5"
           style={{
             background: "rgba(255,255,255,0.10)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-            border: "1px solid rgba(255,255,255,0.18)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
           }}
         >
-          {/* logo */}
+          {/* Logo */}
           <div className="flex flex-col items-center gap-2 pb-2">
-            <img
-              src="/logo-white.svg"
-              alt="Harbor Grove Care & Mobility"
-              style={{ width: 180, height: "auto" }}
-            />
-            <p className="text-white/60 text-xs tracking-wide">Operations Dashboard</p>
+            <div className="bg-white/15 rounded-xl px-4 py-3">
+              <Image
+                src="/logo.png"
+                alt="Harbor Grove Care & Mobility"
+                width={160}
+                height={54}
+                className="object-contain"
+                priority
+              />
+            </div>
+            <p className="text-white/60 text-xs tracking-widest uppercase mt-1">Operations Dashboard</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -81,7 +94,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg text-sm font-bold transition-all disabled:opacity-60"
+              className="w-full py-2.5 rounded-lg text-sm font-bold transition-all disabled:opacity-60 hover:brightness-110"
               style={{ background: "#F9A825", color: "#0D2B4E" }}
             >
               {loading ? "Signing in…" : "Sign In"}
