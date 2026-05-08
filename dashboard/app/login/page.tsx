@@ -27,11 +27,11 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-end bg-cover bg-center bg-no-repeat"
+      className="relative min-h-screen flex items-center justify-end bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: "url('/nemt-van.png')" }}
     >
       {/* dark overlay */}
-      <div className="absolute inset-0 bg-[#0D2B4E]/70" />
+      <div className="absolute inset-0 bg-[#0D2B4E]/65" />
 
       {/* login card — right side */}
       <div className="relative z-10 w-full max-w-sm mr-8 md:mr-16 lg:mr-24">
@@ -48,9 +48,9 @@ export default function LoginPage() {
           {/* logo */}
           <div className="flex flex-col items-center gap-2 pb-2">
             <img
-              src="/logo.png"
+              src="/logo-white.svg"
               alt="Harbor Grove Care & Mobility"
-              style={{ width: 180, height: "auto", filter: "brightness(0) invert(1)" }}
+              style={{ width: 180, height: "auto" }}
             />
             <p className="text-white/60 text-xs tracking-wide">Operations Dashboard</p>
           </div>
