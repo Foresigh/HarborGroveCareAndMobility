@@ -69,9 +69,16 @@ export default function InvoiceDetailPage() {
     <>
       <style>{`
         @media print {
+          @page { margin: 0; size: A4; }
           body * { visibility: hidden; }
           #invoice-printable, #invoice-printable * { visibility: visible; }
-          #invoice-printable { position: fixed; inset: 0; width: 100%; }
+          #invoice-printable {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            border: none !important;
+            border-radius: 0 !important;
+          }
           #invoice-actions { display: none !important; }
         }
       `}</style>
@@ -108,7 +115,7 @@ export default function InvoiceDetailPage() {
         </div>
 
         <div id="invoice-printable" className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="bg-[#0D2B4E] px-8 py-4">
+          <div className="bg-[#0D2B4E] px-8 py-4" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" } as React.CSSProperties}>
             <div className="flex items-center justify-between">
               <img src="/logo.png" alt="Harbor Grove Care & Mobility" style={{ height: 48, width: "auto", filter: "brightness(0) invert(1)" }} />
               <div className="text-right">
@@ -138,7 +145,7 @@ export default function InvoiceDetailPage() {
 
             <table className="w-full mb-6">
               <thead>
-                <tr className="bg-slate-50 border-y border-slate-200">
+                <tr className="bg-slate-50 border-y border-slate-200" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" } as React.CSSProperties}>
                   <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</th>
                   <th className="text-center px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Qty</th>
                   <th className="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Unit Price</th>
