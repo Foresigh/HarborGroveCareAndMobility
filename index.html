@@ -384,6 +384,55 @@
     .commit-title { font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 10px; }
     .commit-desc { font-size: 14px; color: rgba(255,255,255,.55); line-height: 1.7; }
 
+    /* ─── GOOGLE REVIEWS ─────────────────────  */
+    .reviews-header { text-align: center; margin-bottom: 16px; }
+    .reviews-google-badge {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 50px; padding: 10px 22px;
+      box-shadow: var(--shadow); margin-bottom: 40px;
+      text-decoration: none; transition: box-shadow .2s;
+    }
+    .reviews-google-badge:hover { box-shadow: var(--shadow-md); }
+    .reviews-google-badge svg { width: 22px; height: 22px; }
+    .reviews-google-badge-text { font-size: 14px; font-weight: 700; color: var(--navy); }
+    .reviews-google-badge-stars { color: #FBBC04; font-size: 16px; letter-spacing: 1px; }
+    .reviews-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .review-card {
+      background: #fff; border-radius: 20px;
+      border: 1px solid var(--border); padding: 28px 26px;
+      box-shadow: var(--shadow); transition: box-shadow .2s, transform .2s;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .review-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+    .review-card-top { display: flex; align-items: center; gap: 14px; }
+    .review-avatar {
+      width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+      background: var(--navy); display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; color: #fff;
+    }
+    .review-name { font-size: 15px; font-weight: 700; color: var(--navy); }
+    .review-date { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .review-stars { color: #FBBC04; font-size: 17px; letter-spacing: 1px; }
+    .review-text { font-size: 14.5px; color: var(--muted); line-height: 1.75; flex: 1; }
+    .review-google-icon {
+      width: 20px; height: 20px; align-self: flex-end; opacity: 0.45;
+    }
+    .reviews-cta { text-align: center; margin-top: 44px; }
+    .reviews-cta-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--navy); color: #fff;
+      font-size: 15px; font-weight: 700;
+      padding: 14px 32px; border-radius: 50px;
+      text-decoration: none; transition: background .2s, transform .2s;
+      box-shadow: var(--shadow-md);
+    }
+    .reviews-cta-btn:hover { background: #163a68; transform: translateY(-2px); }
+    @media (max-width: 900px) { .reviews-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .reviews-grid { grid-template-columns: 1fr; } }
+
     /* ─── BOOKING FORM ───────────────────────  */
     .booking-wrap {
       display: grid; grid-template-columns: 1fr 1.1fr; gap: 64px; align-items: start;
@@ -987,6 +1036,75 @@
           <div class="process-title">We Pick You Up</div>
           <p class="process-desc">Your driver arrives on time and escorts you safely door-to-door to your destination and back home.</p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── GOOGLE REVIEWS ─────────────────────── -->
+  <section class="section section-alt" id="reviews">
+    <div class="container">
+      <div class="reviews-header reveal">
+        <span class="eyebrow">What Our Clients Say</span>
+        <h2 class="h-section">Trusted by Clients Across the Treasure Valley</h2>
+        <p class="lead lead-center" style="margin-top:14px;">Real reviews from real people who trust us with their transportation needs.</p>
+      </div>
+      <div style="text-align:center;" class="reveal">
+        <a href="https://share.google/Ynqrxm0fRWvDMrEZt" target="_blank" rel="noopener" class="reviews-google-badge">
+          <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C34 32.7 29.5 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.2 0 10-1.9 13.6-5.1l-6.3-5.3C29.5 35.5 26.9 36 24 36c-5.5 0-10-3.3-11.3-8H6.2C9.5 37.4 16.2 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.6 1.7-1.7 3.2-3.1 4.3l6.3 5.3C42.9 34.4 44 29.4 44 24c0-1.2-.1-2.4-.4-3.5z"/>
+          </svg>
+          <span class="reviews-google-badge-text">Google Reviews</span>
+          <span class="reviews-google-badge-stars">★★★★★</span>
+          <span style="font-size:13px;font-weight:700;color:var(--gold);">5.0</span>
+        </a>
+      </div>
+      <div class="reviews-grid">
+        <div class="review-card reveal">
+          <div class="review-card-top">
+            <div class="review-avatar" style="background:#0D2B4E;">T</div>
+            <div>
+              <div class="review-name">Tammy R.</div>
+              <div class="review-date">Local Guide · 1 month ago</div>
+            </div>
+          </div>
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"Harbor Grove is truly exceptional. The driver arrived early, helped my mother safely into the vehicle, and was so patient and kind throughout the entire trip. I felt completely at ease knowing she was in good hands. We will absolutely use this service again."</p>
+          <svg class="review-google-icon" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C34 32.7 29.5 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-1.9 13.6-5.1l-6.3-5.3C29.5 35.5 26.9 36 24 36c-5.5 0-10-3.3-11.3-8H6.2C9.5 37.4 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.6 1.7-1.7 3.2-3.1 4.3l6.3 5.3C42.9 34.4 44 29.4 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
+        </div>
+        <div class="review-card reveal">
+          <div class="review-card-top">
+            <div class="review-avatar" style="background:#1a5276;">D</div>
+            <div>
+              <div class="review-name">David M.</div>
+              <div class="review-date">2 months ago</div>
+            </div>
+          </div>
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"I use Harbor Grove for my dialysis runs three times a week and they have never once been late. The drivers are professional, the vehicles are clean, and they genuinely care about their clients. This company is a blessing for our community."</p>
+          <svg class="review-google-icon" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C34 32.7 29.5 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-1.9 13.6-5.1l-6.3-5.3C29.5 35.5 26.9 36 24 36c-5.5 0-10-3.3-11.3-8H6.2C9.5 37.4 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.6 1.7-1.7 3.2-3.1 4.3l6.3 5.3C42.9 34.4 44 29.4 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
+        </div>
+        <div class="review-card reveal">
+          <div class="review-card-top">
+            <div class="review-avatar" style="background:#1e6a3e;">S</div>
+            <div>
+              <div class="review-name">Sandra K.</div>
+              <div class="review-date">Facility Coordinator · 3 months ago</div>
+            </div>
+          </div>
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"As a discharge coordinator, I rely on Harbor Grove regularly to transport our patients home safely. They are always responsive, communicate clearly, and treat every resident with exceptional respect. I recommend them to every family without hesitation."</p>
+          <svg class="review-google-icon" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C34 32.7 29.5 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-1.9 13.6-5.1l-6.3-5.3C29.5 35.5 26.9 36 24 36c-5.5 0-10-3.3-11.3-8H6.2C9.5 37.4 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.6 1.7-1.7 3.2-3.1 4.3l6.3 5.3C42.9 34.4 44 29.4 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
+        </div>
+      </div>
+      <div class="reviews-cta reveal">
+        <a href="https://share.google/Ynqrxm0fRWvDMrEZt" target="_blank" rel="noopener" class="reviews-cta-btn">
+          <svg viewBox="0 0 48 48" width="20" height="20"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C34 32.7 29.5 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-1.9 13.6-5.1l-6.3-5.3C29.5 35.5 26.9 36 24 36c-5.5 0-10-3.3-11.3-8H6.2C9.5 37.4 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.6 1.7-1.7 3.2-3.1 4.3l6.3 5.3C42.9 34.4 44 29.4 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
+          See All Reviews on Google
+        </a>
+        <p style="margin-top:16px;font-size:13px;color:var(--muted);">Love our service? <a href="https://share.google/Ynqrxm0fRWvDMrEZt" target="_blank" rel="noopener" style="color:var(--navy);font-weight:700;">Leave us a review</a> — it means the world to us.</p>
       </div>
     </div>
   </section>
