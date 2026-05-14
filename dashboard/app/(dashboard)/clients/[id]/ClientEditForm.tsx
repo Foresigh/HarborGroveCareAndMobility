@@ -11,7 +11,7 @@ interface Client {
   emergencyName: string | null; emergencyPhone: string | null;
 }
 
-const BILLING_TYPES = ["MEDICAID", "PRIVATE_PAY", "FACILITY", "THIRD_PARTY"];
+const BILLING_TYPES = ["PRIVATE_PAY", "FACILITY", "THIRD_PARTY"];
 
 export function ClientEditForm({ client }: { client: Client }) {
   const router = useRouter();
@@ -74,10 +74,6 @@ export function ClientEditForm({ client }: { client: Client }) {
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">ZIP</label>
             <input name="zip" defaultValue={client.zip ?? ""} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Medicaid ID</label>
-            <input name="medicaidId" defaultValue={client.medicaidId ?? ""} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Insurance ID</label>

@@ -70,7 +70,7 @@ export function BillingClaimForm({ claim }: { claim: Claim }) {
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Payer</label>
             <select name="payer" defaultValue={claim.payer}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-              {["MEDICAID", "PRIVATE_PAY", "FACILITY", "THIRD_PARTY"].map((p) => (
+              {["PRIVATE_PAY", "FACILITY", "THIRD_PARTY"].map((p) => (
                 <option key={p} value={p}>{p.replace("_", " ")}</option>
               ))}
             </select>

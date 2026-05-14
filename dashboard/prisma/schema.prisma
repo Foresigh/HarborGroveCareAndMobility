@@ -91,7 +91,7 @@ model Client {
   zip            String?
   insuranceId    String?
   medicaidId     String?
-  billingType    BillingType @default(MEDICAID)
+  billingType    BillingType @default(PRIVATE_PAY)
   mobilityNeeds  String?
   specialNotes   String?
   emergencyName  String?
@@ -149,7 +149,7 @@ model Ride {
   completedAt     DateTime?
   status          RideStatus    @default(SCHEDULED)
   rideType        RideType      @default(AMBULATORY)
-  billingType     BillingType   @default(MEDICAID)
+  billingType     BillingType   @default(PRIVATE_PAY)
   providerName    String?
   providerAddress String?
   notes           String?

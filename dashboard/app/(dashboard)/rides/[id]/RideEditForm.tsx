@@ -34,7 +34,7 @@ interface Ride {
 
 const STATUS_OPTIONS = ["SCHEDULED", "EN_ROUTE", "PICKED_UP", "COMPLETED", "CANCELLED", "NO_SHOW"];
 const RIDE_TYPES = ["AMBULATORY", "WHEELCHAIR", "STRETCHER", "BARIATRIC"];
-const BILLING_TYPES = ["MEDICAID", "PRIVATE_PAY", "FACILITY", "THIRD_PARTY"];
+const BILLING_TYPES = ["PRIVATE_PAY", "FACILITY", "THIRD_PARTY"];
 
 export function RideEditForm({ ride, drivers, vehicles }: { ride: Ride; drivers: Driver[]; vehicles: Vehicle[] }) {
   const router = useRouter();

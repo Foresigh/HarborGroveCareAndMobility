@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       dropoffAddress: body.dropoffAddress,
       scheduledAt: new Date(body.scheduledAt),
       rideType: (body.rideType as RideType) ?? RideType.AMBULATORY,
-      billingType: (body.billingType as BillingType) ?? BillingType.MEDICAID,
+      billingType: (body.billingType as BillingType) ?? BillingType.PRIVATE_PAY,
       providerName: body.providerName || null,
       notes: body.notes || null,
       amount: body.amount ? parseFloat(body.amount) : null,

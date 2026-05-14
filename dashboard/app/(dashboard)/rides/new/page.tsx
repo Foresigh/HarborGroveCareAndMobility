@@ -80,7 +80,6 @@ export default function BookRidePage() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Billing Type</label>
               <select name="billingType" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="MEDICAID">Medicaid</option>
                 <option value="PRIVATE_PAY">Private Pay</option>
                 <option value="FACILITY">Facility Contract</option>
                 <option value="THIRD_PARTY">Third Party</option>
