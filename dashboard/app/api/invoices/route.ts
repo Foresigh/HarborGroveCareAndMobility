@@ -11,7 +11,7 @@ function generateInvoiceNum(): string {
 
 export async function GET() {
   const invoices = await prisma.invoice.findMany({
-    include: { client: true, items: true },
+    include: { client: true, facility: true, items: true },
     orderBy: { createdAt: "desc" },
   });
   return NextResponse.json(invoices);
@@ -19,34 +19,47 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { clientId, dueDate, notes, items } = body;
+  const { clientId, facilityId, dueDate, notes, items, billingPeriodStart, billingPeriodEnd, paymentTerms } = body;
 
-  const subtotal = items.reduce(
-    (sum: number, item: { quantity: number; unitPrice: string }) =>
-      sum + (Number(item.unitPrice) || 0) * (item.quantity || 1),
-    0
-  );
+  const subtotal = items.reduce((sum: number, item: { total: number }) => sum + (Number(item.total) || 0), 0);
 
   const invoice = await prisma.invoice.create({
     data: {
       invoiceNum: generateInvoiceNum(),
-      clientId,
+      clientId: clientId || null,
+      facilityId: facilityId || null,
+      billingPeriodStart: billingPeriodStart ? new Date(billingPeriodStart) : null,
+      billingPeriodEnd: billingPeriodEnd ? new Date(billingPeriodEnd) : null,
+      paymentTerms: paymentTerms || "Net 30",
       dueDate: new Date(dueDate),
       subtotal,
       tax: 0,
       total: subtotal,
       notes: notes || null,
       items: {
-        create: items.map((item: { description: string; quantity: number; unitPrice: string; rideId?: string }) => ({
+        create: items.map((item: {
+          description: string; quantity: number; unitPrice: number; total: number; rideId?: string;
+          serviceType?: string; tripType?: string; patientName?: string; patientDob?: string;
+          serviceDate?: string; miles?: number; ownWheelchair?: boolean; needsO2?: boolean; weight?: number;
+        }) => ({
           description: item.description,
           quantity: item.quantity || 1,
           unitPrice: Number(item.unitPrice) || 0,
-          total: (Number(item.unitPrice) || 0) * (item.quantity || 1),
+          total: Number(item.total) || 0,
           rideId: item.rideId || null,
+          serviceType: item.serviceType || null,
+          tripType: item.tripType || null,
+          patientName: item.patientName || null,
+          patientDob: item.patientDob || null,
+          serviceDate: item.serviceDate ? new Date(item.serviceDate) : null,
+          miles: item.miles != null ? item.miles : null,
+          ownWheelchair: item.ownWheelchair ?? null,
+          needsO2: item.needsO2 ?? null,
+          weight: item.weight || null,
         })),
       },
     },
-    include: { items: true, client: true },
+    include: { items: true, client: true, facility: true },
   });
 
   return NextResponse.json(invoice, { status: 201 });

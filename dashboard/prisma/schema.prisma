@@ -50,6 +50,11 @@ enum InvoiceStatus {
   OVERDUE
 }
 
+enum TripType {
+  ONE_WAY
+  ROUND_TRIP
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
@@ -58,6 +63,19 @@ model User {
   role      Role     @default(DISPATCHER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Facility {
+  id        String    @id @default(cuid())
+  name      String
+  address   String?
+  email     String?
+  phone     String?
+  contact   String?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  invoices  Invoice[]
 }
 
 model Client {
@@ -117,27 +135,27 @@ model Vehicle {
 }
 
 model Ride {
-  id              String      @id @default(cuid())
+  id              String        @id @default(cuid())
   clientId        String
-  client          Client      @relation(fields: [clientId], references: [id])
+  client          Client        @relation(fields: [clientId], references: [id])
   driverId        String?
-  driver          Driver?     @relation(fields: [driverId], references: [id])
+  driver          Driver?       @relation(fields: [driverId], references: [id])
   vehicleId       String?
-  vehicle         Vehicle?    @relation(fields: [vehicleId], references: [id])
+  vehicle         Vehicle?      @relation(fields: [vehicleId], references: [id])
   pickupAddress   String
   dropoffAddress  String
   scheduledAt     DateTime
   pickedUpAt      DateTime?
   completedAt     DateTime?
-  status          RideStatus  @default(SCHEDULED)
-  rideType        RideType    @default(AMBULATORY)
-  billingType     BillingType @default(MEDICAID)
+  status          RideStatus    @default(SCHEDULED)
+  rideType        RideType      @default(AMBULATORY)
+  billingType     BillingType   @default(MEDICAID)
   providerName    String?
   providerAddress String?
   notes           String?
-  amount          Decimal?    @db.Decimal(10, 2)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  amount          Decimal?      @db.Decimal(10, 2)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   billingClaim    BillingClaim?
   invoiceItems    InvoiceItem[]
 }
@@ -158,34 +176,49 @@ model BillingClaim {
 }
 
 model Invoice {
-  id         String        @id @default(cuid())
-  invoiceNum String        @unique
-  clientId   String
-  client     Client        @relation(fields: [clientId], references: [id])
-  status     InvoiceStatus @default(DRAFT)
-  issueDate  DateTime      @default(now())
-  dueDate    DateTime
-  subtotal   Decimal       @db.Decimal(10, 2)
-  tax        Decimal       @default(0) @db.Decimal(10, 2)
-  total      Decimal       @db.Decimal(10, 2)
-  notes      String?
-  sentAt     DateTime?
-  paidAt     DateTime?
-  items      InvoiceItem[]
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  invoiceNum         String        @unique
+  clientId           String?
+  client             Client?       @relation(fields: [clientId], references: [id])
+  facilityId         String?
+  facility           Facility?     @relation(fields: [facilityId], references: [id])
+  billingPeriodStart DateTime?
+  billingPeriodEnd   DateTime?
+  paymentTerms       String        @default("Net 30")
+  status             InvoiceStatus @default(DRAFT)
+  issueDate          DateTime      @default(now())
+  dueDate            DateTime
+  subtotal           Decimal       @db.Decimal(10, 2)
+  tax                Decimal       @default(0) @db.Decimal(10, 2)
+  total              Decimal       @db.Decimal(10, 2)
+  notes              String?
+  sentAt             DateTime?
+  paidAt             DateTime?
+  items              InvoiceItem[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 }
 
 model InvoiceItem {
-  id          String   @id @default(cuid())
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  rideId      String?
-  ride        Ride?    @relation(fields: [rideId], references: [id])
-  description String
-  quantity    Int      @default(1)
-  unitPrice   Decimal  @db.Decimal(10, 2)
-  total       Decimal  @db.Decimal(10, 2)
+  id            String    @id @default(cuid())
+  invoiceId     String
+  invoice       Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  rideId        String?
+  ride          Ride?     @relation(fields: [rideId], references: [id])
+  description   String
+  quantity      Int       @default(1)
+  unitPrice     Decimal   @db.Decimal(10, 2)
+  total         Decimal   @db.Decimal(10, 2)
+  // Trip detail fields
+  serviceType   String?
+  tripType      String?
+  patientName   String?
+  patientDob    String?
+  serviceDate   DateTime?
+  miles         Decimal?  @db.Decimal(10, 2)
+  ownWheelchair Boolean?
+  needsO2       Boolean?
+  weight        Int?
 }
 
 model Notification {
