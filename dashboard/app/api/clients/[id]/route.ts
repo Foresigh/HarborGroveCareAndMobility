@@ -29,3 +29,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   return NextResponse.json(client);
 }
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  await prisma.client.update({ where: { id }, data: { active: false } });
+  return NextResponse.json({ ok: true });
+}
