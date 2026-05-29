@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { RideType } from "@/lib/generated/prisma/enums";
+import twilio from "twilio";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -67,6 +68,34 @@ export async function POST(req: NextRequest) {
         link: `/rides/${ride.id}`,
       },
     });
+
+    // Send SMS notification to owner
+    const sid = process.env.TWILIO_ACCOUNT_SID;
+    const token = process.env.TWILIO_AUTH_TOKEN;
+    const from = process.env.TWILIO_FROM;
+    const to = process.env.NOTIFY_PHONE;
+
+    if (sid && token && from && to) {
+      try {
+        const apptDate = new Date(scheduledAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+        const apptTime = new Date(scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const smsBody = [
+          `NEW RIDE REQUEST - HarborGrove`,
+          `Name: ${firstName} ${lastName}`,
+          `Phone: ${phone}`,
+          `Date: ${apptDate} at ${apptTime}`,
+          `From: ${pickup}`,
+          `To: ${destination}`,
+          mobility ? `Mobility: ${mobility}` : null,
+          notes ? `Notes: ${notes}` : null,
+        ].filter(Boolean).join("\n");
+
+        const client = twilio(sid, token);
+        await client.messages.create({ body: smsBody, from, to });
+      } catch (smsErr) {
+        console.error("Twilio SMS error:", smsErr);
+      }
+    }
 
     return NextResponse.json({ success: true, rideId: ride.id }, { headers: CORS });
   } catch (err) {
