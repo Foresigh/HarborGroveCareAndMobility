@@ -147,7 +147,7 @@
     }
     .header.scrolled { box-shadow: 0 4px 28px rgba(13,43,78,.12); }
     .nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; gap: 24px; }
-    .nav-logo img { height: 80px; width: auto; transition: opacity .2s; }
+    .nav-logo img { height: 110px; width: auto; transition: opacity .2s; }
     .nav-logo:hover img { opacity: .85; }
     .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
     .nav-links a { font-size: 14px; font-weight: 600; color: var(--muted); letter-spacing: .2px; transition: color .2s; padding: 4px 0; }
@@ -660,7 +660,7 @@
       .announce-bar { font-size: 12px; padding: 9px 12px; }
       .nav-links, .nav-right { display: none; }
       .hamburger { display: flex; }
-      .nav-logo img { height: 64px; }
+      .nav-logo img { height: 80px; }
 
       .hero { min-height: 100svh; }
       .hero-content { padding: 72px 0 100px; }
@@ -725,11 +725,13 @@
     <a href="tel:2082973601">Call Us: 208-297-3601</a>
   </div>
 
+  <div id="top" style="position:absolute;top:0;left:0;"></div>
+
   <!-- ─── HEADER ──────────────────────────── -->
   <header class="header" id="header">
     <div class="container">
       <nav class="nav">
-        <a href="#top" class="nav-logo" id="top">
+        <a href="#top" class="nav-logo">
           <img src="images/logo.svg" alt="Harbor Grove Care &amp; Mobility LLC" />
         </a>
         <ul class="nav-links">
