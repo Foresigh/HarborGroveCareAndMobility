@@ -9,6 +9,12 @@ function generateInvoiceNum(): string {
   return `HG-${yy}${mm}-${rand}`;
 }
 
+function calcTotal(subtotal: number, discount: number | null, discountType: string | null): number {
+  if (!discount || !discountType) return subtotal;
+  if (discountType === "PERCENT") return Math.max(0, subtotal - subtotal * (discount / 100));
+  return Math.max(0, subtotal - discount);
+}
+
 export async function GET() {
   const invoices = await prisma.invoice.findMany({
     include: { client: true, facility: true, items: true },
@@ -19,9 +25,10 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { clientId, facilityId, dueDate, notes, items, billingPeriodStart, billingPeriodEnd, paymentTerms } = body;
+  const { clientId, facilityId, dueDate, notes, items, billingPeriodStart, billingPeriodEnd, paymentTerms, discount, discountType } = body;
 
   const subtotal = items.reduce((sum: number, item: { total: number }) => sum + (Number(item.total) || 0), 0);
+  const total = calcTotal(subtotal, discount ? Number(discount) : null, discountType ?? null);
 
   const invoice = await prisma.invoice.create({
     data: {
@@ -34,7 +41,9 @@ export async function POST(req: Request) {
       dueDate: new Date(dueDate),
       subtotal,
       tax: 0,
-      total: subtotal,
+      discount: discount ? Number(discount) : null,
+      discountType: discountType || null,
+      total,
       notes: notes || null,
       items: {
         create: items.map((item: {

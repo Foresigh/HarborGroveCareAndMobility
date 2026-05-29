@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 interface Client { id: string; firstName: string; lastName: string; }
@@ -36,36 +36,35 @@ function applyDiscount(subtotal: number, discount: string, discountType: "FLAT" 
   return Math.max(0, subtotal - val);
 }
 
-export default function NewInvoicePage() {
+export default function EditInvoicePage() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
+
   const [billTo, setBillTo] = useState<"facility" | "client">("facility");
   const [clients, setClients] = useState<Client[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [clientId, setClientId] = useState("");
   const [facilityId, setFacilityId] = useState("");
-  const [newFacility, setNewFacility] = useState({ name: "", address: "", email: "", phone: "", contact: "" });
-  const [addingFacility, setAddingFacility] = useState(false);
-  const [billingPeriodStart, setBillingPeriodStart] = useState(() => {
-    const d = new Date(); d.setDate(1); return d.toISOString().split("T")[0];
-  });
-  const [billingPeriodEnd, setBillingPeriodEnd] = useState(() => new Date().toISOString().split("T")[0]);
+  const [billingPeriodStart, setBillingPeriodStart] = useState("");
+  const [billingPeriodEnd, setBillingPeriodEnd] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("Net 10");
-  const [dueDate, setDueDate] = useState(() => {
-    const d = new Date(); d.setDate(d.getDate() + 10); return d.toISOString().split("T")[0];
-  });
+  const [dueDate, setDueDate] = useState("");
   const [trips, setTrips] = useState<TripRow[]>([blankTrip()]);
   const [notes, setNotes] = useState("");
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState<"FLAT" | "PERCENT">("FLAT");
   const [rates, setRates] = useState<Rates>({ AMBULATORY_RATE: 35, WHEELCHAIR_RATE: 45, STRETCHER_RATE: 145, MILEAGE_RATE: 3.65, INCLUDED_MILES: 10 });
-  const [loading, setLoading] = useState(false);
+  const [invoiceNum, setInvoiceNum] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     Promise.all([
+      fetch(`/api/invoices/${id}`).then((r) => r.json()),
       fetch("/api/clients").then((r) => r.json()),
       fetch("/api/facilities").then((r) => r.json()),
       fetch("/api/settings").then((r) => r.json()),
-    ]).then(([c, f, s]) => {
+    ]).then(([inv, c, f, s]) => {
       setClients(c);
       setFacilities(f);
       setRates({
@@ -75,35 +74,50 @@ export default function NewInvoicePage() {
         MILEAGE_RATE: Number(s.MILEAGE_RATE) || 3.65,
         INCLUDED_MILES: Number(s.INCLUDED_MILES) || 10,
       });
+
+      setInvoiceNum(inv.invoiceNum);
+      if (inv.facilityId) { setBillTo("facility"); setFacilityId(inv.facilityId); }
+      else { setBillTo("client"); setClientId(inv.clientId ?? ""); }
+      setBillingPeriodStart(inv.billingPeriodStart ? new Date(inv.billingPeriodStart).toISOString().split("T")[0] : "");
+      setBillingPeriodEnd(inv.billingPeriodEnd ? new Date(inv.billingPeriodEnd).toISOString().split("T")[0] : "");
+      setPaymentTerms(inv.paymentTerms ?? "Net 10");
+      setDueDate(new Date(inv.dueDate).toISOString().split("T")[0]);
+      setNotes(inv.notes ?? "");
+      if (inv.discount) { setDiscount(String(Number(inv.discount))); setDiscountType((inv.discountType as "FLAT" | "PERCENT") ?? "FLAT"); }
+
+      if (inv.items?.length) {
+        setTrips(inv.items.map((item: {
+          serviceDate?: string; patientName?: string; patientDob?: string;
+          serviceType?: string; tripType?: string; miles?: number;
+          ownWheelchair?: boolean; needsO2?: boolean; weight?: number;
+        }) => ({
+          serviceDate: item.serviceDate ? new Date(item.serviceDate).toISOString().split("T")[0] : "",
+          patientName: item.patientName ?? "",
+          patientDob: item.patientDob ?? "",
+          serviceType: item.serviceType ?? "WHEELCHAIR",
+          tripType: item.tripType ?? "ONE_WAY",
+          miles: item.miles != null ? String(item.miles) : "",
+          ownWheelchair: item.ownWheelchair ?? false,
+          needsO2: item.needsO2 ?? false,
+          weight: item.weight != null ? String(item.weight) : "",
+        })));
+      }
+      setLoading(false);
     });
-  }, []);
+  }, [id]);
 
   function updateTrip(i: number, field: keyof TripRow, value: string | boolean) {
     setTrips((prev) => prev.map((t, idx) => idx === i ? { ...t, [field]: value } : t));
-  }
-
-  async function saveFacility() {
-    if (!newFacility.name) return;
-    const res = await fetch("/api/facilities", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newFacility) });
-    if (res.ok) {
-      const f = await res.json();
-      setFacilities((prev) => [...prev, f]);
-      setFacilityId(f.id);
-      setAddingFacility(false);
-      setNewFacility({ name: "", address: "", email: "", phone: "", contact: "" });
-    }
   }
 
   const subtotal = trips.reduce((sum, t) => sum + calcTripTotal(t, rates), 0);
   const grandTotal = discount ? applyDiscount(subtotal, discount, discountType) : subtotal;
   const discountAmount = subtotal - grandTotal;
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (billTo === "facility" && !facilityId) { toast.error("Select or add a facility"); return; }
-    if (billTo === "client" && !clientId) { toast.error("Select a client"); return; }
     if (trips.length === 0) { toast.error("Add at least one trip"); return; }
-    setLoading(true);
+    setSaving(true);
 
     const rateMap: Record<string, number> = {
       AMBULATORY: rates.AMBULATORY_RATE,
@@ -130,8 +144,8 @@ export default function NewInvoicePage() {
       };
     });
 
-    const res = await fetch("/api/invoices", {
-      method: "POST",
+    const res = await fetch(`/api/invoices/${id}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         clientId: billTo === "client" ? clientId : null,
@@ -146,28 +160,29 @@ export default function NewInvoicePage() {
         discountType: discount ? discountType : null,
       }),
     });
-    setLoading(false);
+    setSaving(false);
     if (res.ok) {
-      const data = await res.json();
-      toast.success("Invoice created");
-      router.push(`/invoices/${data.id}`);
+      toast.success("Invoice updated");
+      router.push(`/invoices/${id}`);
     } else {
-      const err = await res.json().catch(() => ({}));
-      toast.error(err.error ?? "Failed to create invoice");
+      toast.error("Failed to save changes");
     }
   }
 
   const inputCls = "w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F9A825]";
   const labelCls = "block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1";
 
+  if (loading) return <div className="text-slate-400 text-sm p-8">Loading…</div>;
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => router.back()} className="text-slate-500 hover:text-slate-800 text-sm">← Back</button>
-        <h1 className="text-xl font-bold text-slate-800">New Invoice</h1>
+        <h1 className="text-xl font-bold text-slate-800">Edit Invoice</h1>
+        <span className="text-sm text-slate-400 font-mono">{invoiceNum}</span>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSave} className="space-y-5">
         {/* Bill To */}
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex gap-3 mb-5">
@@ -178,39 +193,18 @@ export default function NewInvoicePage() {
               </button>
             ))}
           </div>
-
           {billTo === "facility" ? (
-            <div className="space-y-3">
-              <div>
-                <label className={labelCls}>Facility</label>
-                <div className="flex gap-2">
-                  <select value={facilityId} onChange={(e) => setFacilityId(e.target.value)} className={inputCls}>
-                    <option value="">Select facility…</option>
-                    {facilities.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-                  </select>
-                  <button type="button" onClick={() => setAddingFacility(!addingFacility)}
-                    className="shrink-0 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">
-                    {addingFacility ? "Cancel" : "+ New"}
-                  </button>
-                </div>
-              </div>
-              {addingFacility && (
-                <div className="grid grid-cols-2 gap-3 bg-slate-50 rounded-lg p-4">
-                  <div><label className={labelCls}>Facility Name *</label><input value={newFacility.name} onChange={(e) => setNewFacility((p) => ({ ...p, name: e.target.value }))} className={inputCls} placeholder="Cascadia of Nampa" /></div>
-                  <div><label className={labelCls}>Contact Person</label><input value={newFacility.contact} onChange={(e) => setNewFacility((p) => ({ ...p, contact: e.target.value }))} className={inputCls} /></div>
-                  <div><label className={labelCls}>Address</label><input value={newFacility.address} onChange={(e) => setNewFacility((p) => ({ ...p, address: e.target.value }))} className={inputCls} /></div>
-                  <div><label className={labelCls}>Phone</label><input value={newFacility.phone} onChange={(e) => setNewFacility((p) => ({ ...p, phone: e.target.value }))} className={inputCls} /></div>
-                  <div><label className={labelCls}>Email</label><input value={newFacility.email} onChange={(e) => setNewFacility((p) => ({ ...p, email: e.target.value }))} className={inputCls} /></div>
-                  <div className="flex items-end">
-                    <button type="button" onClick={saveFacility} className="w-full bg-[#0D2B4E] text-white text-sm font-semibold px-4 py-2 rounded-lg">Save Facility</button>
-                  </div>
-                </div>
-              )}
+            <div>
+              <label className={labelCls}>Facility</label>
+              <select value={facilityId} onChange={(e) => setFacilityId(e.target.value)} className={inputCls}>
+                <option value="">Select facility…</option>
+                {facilities.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
             </div>
           ) : (
             <div>
               <label className={labelCls}>Client</label>
-              <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className={inputCls}>
+              <select value={clientId} onChange={(e) => setClientId(e.target.value)} className={inputCls}>
                 <option value="">Select client…</option>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}
               </select>
@@ -251,7 +245,6 @@ export default function NewInvoicePage() {
               Amb ${rates.AMBULATORY_RATE} · W/C ${rates.WHEELCHAIR_RATE} · Str ${rates.STRETCHER_RATE} · +${rates.MILEAGE_RATE}/mi after {rates.INCLUDED_MILES}mi
             </div>
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
@@ -296,11 +289,8 @@ export default function NewInvoicePage() {
             <button type="button" onClick={() => setTrips((p) => [...p, blankTrip()])}
               className="text-sm text-[#0D2B4E] font-semibold hover:underline self-end">+ Add Trip</button>
 
-            {/* Totals + discount */}
             <div className="text-right space-y-2">
               <div className="text-xs text-slate-500">{trips.length} trip{trips.length !== 1 ? "s" : ""} · Subtotal: <span className="font-semibold text-slate-700">${subtotal.toFixed(2)}</span></div>
-
-              {/* Discount row */}
               <div className="flex items-center gap-2 justify-end">
                 <span className="text-xs text-slate-500">Discount:</span>
                 <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs">
@@ -317,13 +307,9 @@ export default function NewInvoicePage() {
                   className="border border-slate-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#F9A825] w-24 text-right"
                 />
               </div>
-
               {discountAmount > 0 && (
-                <div className="text-xs text-emerald-600 font-medium">
-                  − ${discountAmount.toFixed(2)} discount applied
-                </div>
+                <div className="text-xs text-emerald-600 font-medium">− ${discountAmount.toFixed(2)} discount applied</div>
               )}
-
               <div className="text-lg font-bold text-[#0D2B4E]">Total: ${grandTotal.toFixed(2)}</div>
             </div>
           </div>
@@ -338,9 +324,9 @@ export default function NewInvoicePage() {
         </div>
 
         <div className="flex gap-3">
-          <button type="submit" disabled={loading}
+          <button type="submit" disabled={saving}
             className="bg-[#0D2B4E] hover:bg-[#0a2240] text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition disabled:opacity-60">
-            {loading ? "Creating…" : "Create Invoice"}
+            {saving ? "Saving…" : "Save Changes"}
           </button>
           <button type="button" onClick={() => router.back()}
             className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-6 py-2.5 rounded-lg text-sm transition">

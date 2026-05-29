@@ -13,6 +13,7 @@ interface InvoiceDetail {
   issueDate: string; dueDate: string; sentAt: string | null; paidAt: string | null;
   billingPeriodStart: string | null; billingPeriodEnd: string | null;
   subtotal: number; tax: number; total: number; notes: string | null;
+  discount?: number | null; discountType?: string | null;
   client?: { firstName: string; lastName: string; email?: string; phone: string; address?: string; city?: string; state: string; } | null;
   facility?: { name: string; address?: string; email?: string; phone?: string; contact?: string; } | null;
   items: TripItem[];
@@ -126,6 +127,13 @@ export default function InvoiceDetailPage() {
               <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5v-2z"/></svg>
               Download PDF
             </button>
+            {invoice.status !== "PAID" && (
+              <button onClick={() => router.push(`/invoices/${invoice.id}/edit`)}
+                className="flex items-center gap-1.5 border border-slate-200 hover:border-slate-300 bg-white text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg transition">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                Edit
+              </button>
+            )}
             {invoice.status !== "PAID" && (
               <button onClick={markPaid} disabled={marking} className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition disabled:opacity-60">
                 {marking ? "Saving…" : "Mark as Paid"}
@@ -292,8 +300,24 @@ export default function InvoiceDetailPage() {
 
           {/* Total due */}
           <div style={{ padding: "16px 40px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "flex-end" }}>
-            <div style={{ width: 260 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderTop: "2px solid #0D2B4E" }}>
+            <div style={{ width: 300 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: 13, color: "#64748b" }}>Subtotal</span>
+                <span style={{ fontSize: 13, color: "#64748b" }}>${Number(invoice.subtotal).toFixed(2)}</span>
+              </div>
+              {invoice.discount && Number(invoice.discount) > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0" }}>
+                  <span style={{ fontSize: 13, color: "#059669" }}>
+                    Discount {invoice.discountType === "PERCENT" ? `(${Number(invoice.discount)}%)` : ""}
+                  </span>
+                  <span style={{ fontSize: 13, color: "#059669", fontWeight: 600 }}>
+                    − ${invoice.discountType === "PERCENT"
+                      ? (Number(invoice.subtotal) * Number(invoice.discount) / 100).toFixed(2)
+                      : Number(invoice.discount).toFixed(2)}
+                  </span>
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderTop: "2px solid #0D2B4E", marginTop: 4 }}>
                 <span style={{ fontSize: 15, fontWeight: 700, color: "#0D2B4E" }}>Total Due</span>
                 <span style={{ fontSize: 22, fontWeight: 800, color: "#0D2B4E" }}>${Number(invoice.total).toFixed(2)}</span>
               </div>
