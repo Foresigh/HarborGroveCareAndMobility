@@ -19,11 +19,11 @@ interface InvoiceDetail {
   items: TripItem[];
 }
 
-const SERVICE_RATES: Record<string, number> = { AMBULATORY: 35, WHEELCHAIR: 45, STRETCHER: 145 };
-const MILEAGE_RATE = 3.65;
-const INCLUDED_MILES = 10;
+interface Rates { AMBULATORY_RATE: number; WHEELCHAIR_RATE: number; STRETCHER_RATE: number; MILEAGE_RATE: number; INCLUDED_MILES: number; }
+const DEFAULT_RATES: Rates = { AMBULATORY_RATE: 35, WHEELCHAIR_RATE: 45, STRETCHER_RATE: 145, MILEAGE_RATE: 3.65, INCLUDED_MILES: 10 };
 
-function pricingBreakdown(items: TripItem[]) {
+function pricingBreakdown(items: TripItem[], rates: Rates) {
+  const rateMap: Record<string, number> = { AMBULATORY: rates.AMBULATORY_RATE, WHEELCHAIR: rates.WHEELCHAIR_RATE, STRETCHER: rates.STRETCHER_RATE };
   const types = ["AMBULATORY", "WHEELCHAIR", "STRETCHER"];
   return types.map((type) => {
     const typeItems = items.filter((i) => i.serviceType === type);
@@ -32,13 +32,13 @@ function pricingBreakdown(items: TripItem[]) {
     const oneWayMiles = oneWay.reduce((s, i) => s + (Number(i.miles) || 0), 0);
     const roundTripMiles = roundTrip.reduce((s, i) => s + (Number(i.miles) || 0), 0);
     const totalTrips = typeItems.length;
-    const includedMileCredit = totalTrips * INCLUDED_MILES;
+    const includedMileCredit = totalTrips * rates.INCLUDED_MILES;
     const totalMiles = oneWayMiles + roundTripMiles;
     const billableMiles = Math.max(0, totalMiles - includedMileCredit);
-    const baseRate = SERVICE_RATES[type] ?? 0;
+    const baseRate = rateMap[type] ?? 0;
     const baseFees = typeItems.reduce((s, i) => s + (i.tripType === "ROUND_TRIP" ? baseRate * 2 : baseRate), 0);
-    const mileageCharges = billableMiles * MILEAGE_RATE;
-    const discountValue = includedMileCredit * MILEAGE_RATE;
+    const mileageCharges = billableMiles * rates.MILEAGE_RATE;
+    const discountValue = includedMileCredit * rates.MILEAGE_RATE;
     const lineTotal = baseFees + mileageCharges;
     return { type, baseRate, oneWayCount: oneWay.length, oneWayMiles, roundTripCount: roundTrip.length, roundTripMiles, billableMiles, baseFees, mileageCharges, includedMileCredit, discountValue, lineTotal };
   }).filter((r) => r.oneWayCount > 0 || r.roundTripCount > 0);
@@ -48,11 +48,25 @@ export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
+  const [rates, setRates] = useState<Rates>(DEFAULT_RATES);
   const [sending, setSending] = useState(false);
   const [marking, setMarking] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/invoices/${id}`).then((r) => r.json()).then(setInvoice);
+    const n = (v: string, d: number) => { const x = Number(v); return isNaN(x) ? d : x; };
+    Promise.all([
+      fetch(`/api/invoices/${id}`).then((r) => r.json()),
+      fetch("/api/settings").then((r) => r.json()),
+    ]).then(([inv, s]) => {
+      setInvoice(inv);
+      setRates({
+        AMBULATORY_RATE: n(s.AMBULATORY_RATE, 35),
+        WHEELCHAIR_RATE: n(s.WHEELCHAIR_RATE, 45),
+        STRETCHER_RATE:  n(s.STRETCHER_RATE, 145),
+        MILEAGE_RATE:    n(s.MILEAGE_RATE, 3.65),
+        INCLUDED_MILES:  n(s.INCLUDED_MILES, 10),
+      });
+    });
   }, [id]);
 
   async function sendInvoice() {
@@ -86,7 +100,7 @@ export default function InvoiceDetailPage() {
 
   if (!invoice) return <div className="text-slate-400 text-sm p-8">Loading…</div>;
 
-  const breakdown = pricingBreakdown(invoice.items);
+  const breakdown = pricingBreakdown(invoice.items, rates);
   const isFacility = !!invoice.facility;
   const billTo = isFacility ? invoice.facility : invoice.client;
 
@@ -248,7 +262,7 @@ export default function InvoiceDetailPage() {
                     <tr key={r.type} style={{ borderBottom: "1px solid #f1f5f9" }}>
                       <td style={{ padding: "8px", fontWeight: 600, color: "#334155" }}>{r.type.charAt(0) + r.type.slice(1).toLowerCase()}</td>
                       <td style={{ padding: "8px", textAlign: "right", color: "#64748b" }}>${r.baseRate.toFixed(2)}</td>
-                      <td style={{ padding: "8px", textAlign: "right", color: "#64748b" }}>${MILEAGE_RATE}</td>
+                      <td style={{ padding: "8px", textAlign: "right", color: "#64748b" }}>${rates.MILEAGE_RATE}</td>
                       <td style={{ padding: "8px", textAlign: "right", color: "#64748b" }}>{r.oneWayCount}</td>
                       <td style={{ padding: "8px", textAlign: "right", color: "#64748b" }}>{r.oneWayMiles.toFixed(1)}</td>
                       <td style={{ padding: "8px", textAlign: "right", color: "#64748b" }}>{r.roundTripCount}</td>
@@ -327,7 +341,7 @@ export default function InvoiceDetailPage() {
           {/* Mileage note + notes */}
           <div style={{ padding: "12px 40px", borderBottom: "1px solid #f1f5f9", background: "#fafbfc" }}>
             <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.6 }}>
-              <strong style={{ color: "#64748b" }}>How mileage is calculated:</strong> One-way trips: first 10 miles included per trip. Round trips: first 10 miles included only once when going to the facility; return mileage receives no additional 10-mile discount.
+              <strong style={{ color: "#64748b" }}>How mileage is calculated:</strong> One-way trips: first {rates.INCLUDED_MILES} miles included per trip. Round trips: first {rates.INCLUDED_MILES} miles included only once when going to the facility; return mileage receives no additional {rates.INCLUDED_MILES}-mile discount. Mileage rate: ${rates.MILEAGE_RATE}/mi.
             </div>
           </div>
 

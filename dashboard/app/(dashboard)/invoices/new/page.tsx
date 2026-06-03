@@ -68,12 +68,13 @@ export default function NewInvoicePage() {
     ]).then(([c, f, s]) => {
       setClients(c);
       setFacilities(f);
+      const n = (v: string, d: number) => { const x = Number(v); return isNaN(x) ? d : x; };
       setRates({
-        AMBULATORY_RATE: Number(s.AMBULATORY_RATE) || 35,
-        WHEELCHAIR_RATE: Number(s.WHEELCHAIR_RATE) || 45,
-        STRETCHER_RATE: Number(s.STRETCHER_RATE) || 145,
-        MILEAGE_RATE: Number(s.MILEAGE_RATE) || 3.65,
-        INCLUDED_MILES: Number(s.INCLUDED_MILES) || 10,
+        AMBULATORY_RATE: n(s.AMBULATORY_RATE, 35),
+        WHEELCHAIR_RATE: n(s.WHEELCHAIR_RATE, 45),
+        STRETCHER_RATE:  n(s.STRETCHER_RATE, 145),
+        MILEAGE_RATE:    n(s.MILEAGE_RATE, 3.65),
+        INCLUDED_MILES:  n(s.INCLUDED_MILES, 10),
       });
     });
   }, []);
