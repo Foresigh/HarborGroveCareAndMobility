@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { RideStatus } from "@/lib/generated/prisma/enums";
+import { DashboardCharts } from "./DashboardCharts";
 
 async function getStats() {
   const today = new Date();
@@ -24,6 +25,67 @@ async function getStats() {
   return { todayRides, scheduled, completed, cancelled, totalClients, activeDrivers, pendingClaims, unpaidInvoices };
 }
 
+async function getChartData() {
+  const now = new Date();
+
+  // Last 7 days — rides per day
+  const days7: { day: string; rides: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    d.setHours(0, 0, 0, 0);
+    const next = new Date(d); next.setDate(next.getDate() + 1);
+    const count = await prisma.ride.count({ where: { scheduledAt: { gte: d, lt: next } } });
+    days7.push({ day: d.toLocaleDateString("en-US", { weekday: "short" }), rides: count });
+  }
+
+  // Current month — revenue per day from rides with amount
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const ridesWithAmount = await prisma.ride.findMany({
+    where: { scheduledAt: { gte: monthStart }, amount: { not: null } },
+    select: { scheduledAt: true, amount: true },
+  });
+  const revenueByDay: Record<string, number> = {};
+  for (const r of ridesWithAmount) {
+    const key = r.scheduledAt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    revenueByDay[key] = (revenueByDay[key] ?? 0) + Number(r.amount);
+  }
+  const monthRevenue = Object.entries(revenueByDay).map(([day, revenue]) => ({ day, revenue }));
+
+  // Status breakdown this month
+  const statusCounts = await prisma.ride.groupBy({
+    by: ["status"],
+    where: { scheduledAt: { gte: monthStart } },
+    _count: true,
+  });
+  const statusColors: Record<string, string> = {
+    COMPLETED: "#059669", SCHEDULED: "#3b82f6", EN_ROUTE: "#f59e0b",
+    CANCELLED: "#94a3b8", NO_SHOW: "#f43f5e", PICKED_UP: "#0ea5e9",
+  };
+  const statusBreakdown = statusCounts.map((s) => ({
+    name: s.status.replace("_", " "),
+    value: s._count,
+    color: statusColors[s.status] ?? "#94a3b8",
+  }));
+
+  // Service type this month
+  const typeCounts = await prisma.ride.groupBy({
+    by: ["rideType"],
+    where: { scheduledAt: { gte: monthStart } },
+    _count: true,
+  });
+  const typeColors: Record<string, string> = {
+    AMBULATORY: "#0D2B4E", WHEELCHAIR: "#F9A825", STRETCHER: "#059669", BARIATRIC: "#8b5cf6",
+  };
+  const serviceBreakdown = typeCounts.map((t) => ({
+    name: t.rideType.charAt(0) + t.rideType.slice(1).toLowerCase(),
+    value: t._count,
+    color: typeColors[t.rideType] ?? "#94a3b8",
+  }));
+
+  return { weekRides: days7, monthRevenue, statusBreakdown, serviceBreakdown };
+}
+
 async function getUpcomingRides() {
   const now = new Date();
   const in2h = new Date(now.getTime() + 2 * 60 * 60 * 1000);
@@ -36,7 +98,7 @@ async function getUpcomingRides() {
 }
 
 export default async function DashboardHome() {
-  const [stats, upcoming] = await Promise.all([getStats(), getUpcomingRides()]);
+  const [stats, upcoming, chartData] = await Promise.all([getStats(), getUpcomingRides(), getChartData()]);
 
   const statCards = [
     { label: "Today's Rides", value: stats.todayRides, color: "bg-blue-600", href: "/rides" },
@@ -64,6 +126,13 @@ export default async function DashboardHome() {
           </Link>
         ))}
       </div>
+
+      <DashboardCharts
+        weekRides={chartData.weekRides}
+        monthRevenue={chartData.monthRevenue}
+        statusBreakdown={chartData.statusBreakdown}
+        serviceBreakdown={chartData.serviceBreakdown}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-slate-200 p-5">
