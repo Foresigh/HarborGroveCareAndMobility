@@ -1,12 +1,12 @@
 "use client";
 import {
-  ResponsiveContainer, BarChart, Bar, LineChart, Line,
-  PieChart, Pie, Cell, Tooltip,
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar,
+  LineChart, Line, PieChart, Pie, Cell, Tooltip, XAxis, YAxis,
 } from "recharts";
 
-interface DayRide { day: string; rides: number; }
-interface DayRevenue { day: string; revenue: number; }
-interface StatusItem { name: string; value: number; color: string; }
+interface DayRide     { day: string; rides: number; }
+interface DayRevenue  { day: string; revenue: number; }
+interface StatusItem  { name: string; value: number; color: string; }
 interface ServiceItem { name: string; value: number; color: string; }
 
 interface Props {
@@ -16,139 +16,150 @@ interface Props {
   serviceBreakdown: ServiceItem[];
 }
 
-const GOLD = "#F9A825";
-const NAVY = "#0D2B4E";
+const TOOLTIP_STYLE = {
+  background: "#0d1b2e",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: 10,
+  fontSize: 12,
+  color: "#fff",
+  padding: "8px 12px",
+};
 
-function CardShell({ title, kpi, sub, children }: { title: string; kpi: string; sub: string; children: React.ReactNode }) {
+function DarkTooltip({ active, payload, label, valuePrefix = "", valueSuffix = "" }: {
+  active?: boolean; payload?: { value: number; color?: string }[]; label?: string;
+  valuePrefix?: string; valueSuffix?: string;
+}) {
+  if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 flex flex-col gap-3">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{title}</div>
-          <div className="text-2xl font-bold text-slate-800 mt-0.5">{kpi}</div>
-          <div className="text-xs text-slate-400 mt-0.5">{sub}</div>
-        </div>
-        <div style={{ width: 4, height: 24, background: `linear-gradient(180deg,${GOLD},${NAVY})`, borderRadius: 2 }} />
+    <div style={TOOLTIP_STYLE}>
+      {label && <div style={{ color: "rgba(255,255,255,0.5)", marginBottom: 4 }}>{label}</div>}
+      <div style={{ fontWeight: 700, color: payload[0].color ?? "#F9A825" }}>
+        {valuePrefix}{typeof payload[0].value === "number" ? payload[0].value.toLocaleString() : payload[0].value}{valueSuffix}
       </div>
-      <div style={{ height: 72 }}>{children}</div>
+    </div>
+  );
+}
+
+function ChartCard({ title, kpi, sub, accent, children }: {
+  title: string; kpi: string; sub: string; accent: string; children: React.ReactNode;
+}) {
+  return (
+    <div style={{
+      background: "linear-gradient(135deg, #111d35 0%, #0d1628 100%)",
+      border: "1px solid rgba(255,255,255,0.06)",
+      borderRadius: 16,
+      padding: "20px 20px 14px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{title}</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", marginTop: 2, lineHeight: 1 }}>{kpi}</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>{sub}</div>
+        </div>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: accent, boxShadow: `0 0 10px ${accent}` }} />
+      </div>
+      <div style={{ height: 90 }}>{children}</div>
     </div>
   );
 }
 
 export function DashboardCharts({ weekRides, monthRevenue, statusBreakdown, serviceBreakdown }: Props) {
-  const totalWeekRides = weekRides.reduce((s, d) => s + d.rides, 0);
-  const totalRevenue = monthRevenue.reduce((s, d) => s + d.revenue, 0);
+  const totalWeekRides   = weekRides.reduce((s, d) => s + d.rides, 0);
+  const totalRevenue     = monthRevenue.reduce((s, d) => s + d.revenue, 0);
   const totalStatusRides = statusBreakdown.reduce((s, d) => s + d.value, 0);
-  const topService = serviceBreakdown.reduce((a, b) => b.value > a.value ? b : a, { name: "—", value: 0, color: "#ccc" });
+  const topService       = serviceBreakdown.reduce((a, b) => b.value > a.value ? b : a, { name: "—", value: 0, color: "#ccc" });
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}
+         className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
 
-      {/* Rides this week */}
-      <CardShell
-        title="Rides This Week"
-        kpi={String(totalWeekRides)}
-        sub="Last 7 days"
-      >
+      {/* Rides this week — area chart */}
+      <ChartCard title="Rides This Week" kpi={String(totalWeekRides)} sub="Last 7 days" accent="#3b82f6">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={weekRides} barCategoryGap="30%">
-            <Tooltip
-              content={({ active, payload }) =>
-                active && payload?.length ? (
-                  <div className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs shadow-sm">
-                    <div className="font-semibold text-slate-700">{payload[0].payload.day}</div>
-                    <div className="text-[#0D2B4E]">{payload[0].value} rides</div>
-                  </div>
-                ) : null
-              }
-            />
-            <Bar dataKey="rides" fill={NAVY} radius={[3, 3, 0, 0]} />
-          </BarChart>
+          <AreaChart data={weekRides} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
+            <Tooltip content={<DarkTooltip valueSuffix=" rides" />} />
+            <Area type="monotone" dataKey="rides" stroke="#3b82f6" strokeWidth={2}
+              fill="url(#blueGrad)" dot={false} activeDot={{ r: 4, fill: "#3b82f6" }} />
+          </AreaChart>
         </ResponsiveContainer>
-      </CardShell>
+      </ChartCard>
 
-      {/* Revenue this month */}
-      <CardShell
-        title="Revenue This Month"
-        kpi={`$${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
-        sub="From completed rides"
-      >
+      {/* Revenue this month — line chart */}
+      <ChartCard title="Revenue This Month"
+        kpi={`$${totalRevenue.toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
+        sub="From completed rides" accent="#10b981">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={monthRevenue}>
-            <Tooltip
-              content={({ active, payload }) =>
-                active && payload?.length ? (
-                  <div className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs shadow-sm">
-                    <div className="font-semibold text-slate-700">{payload[0].payload.day}</div>
-                    <div className="text-emerald-600">${Number(payload[0].value).toFixed(2)}</div>
-                  </div>
-                ) : null
-              }
-            />
-            <Line type="monotone" dataKey="revenue" stroke="#059669" strokeWidth={2} dot={false} />
-          </LineChart>
+          <AreaChart data={monthRevenue} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#10b981" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
+            <Tooltip content={<DarkTooltip valuePrefix="$" />} />
+            <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2}
+              fill="url(#greenGrad)" dot={false} activeDot={{ r: 4, fill: "#10b981" }} />
+          </AreaChart>
         </ResponsiveContainer>
-      </CardShell>
+      </ChartCard>
 
-      {/* Ride status donut */}
-      <CardShell
-        title="Ride Status Mix"
-        kpi={String(totalStatusRides)}
-        sub="This month"
-      >
-        <div className="flex items-center gap-3 h-full">
-          <ResponsiveContainer width={72} height="100%">
+      {/* Status donut */}
+      <ChartCard title="Ride Status Mix" kpi={String(totalStatusRides)} sub="This month" accent="#a855f7">
+        <div style={{ display: "flex", alignItems: "center", gap: 12, height: "100%" }}>
+          <ResponsiveContainer width={88} height="100%">
             <PieChart>
-              <Pie data={statusBreakdown} dataKey="value" innerRadius={22} outerRadius={34} strokeWidth={0}>
-                {statusBreakdown.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+              <Pie data={statusBreakdown} dataKey="value" innerRadius={26} outerRadius={40} strokeWidth={0}>
+                {statusBreakdown.map((e) => <Cell key={e.name} fill={e.color} />)}
               </Pie>
-              <Tooltip
-                content={({ active, payload }) =>
-                  active && payload?.length ? (
-                    <div className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs shadow-sm">
-                      <div className="font-semibold" style={{ color: payload[0].payload.color }}>{payload[0].name}</div>
-                      <div className="text-slate-700">{payload[0].value}</div>
-                    </div>
-                  ) : null
-                }
-              />
+              <Tooltip content={({ active, payload }) =>
+                active && payload?.length
+                  ? <div style={TOOLTIP_STYLE}><span style={{ color: payload[0].payload.color }}>{payload[0].name}: </span>{payload[0].value}</div>
+                  : null
+              } />
             </PieChart>
           </ResponsiveContainer>
-          <div className="flex flex-col gap-1 min-w-0">
-            {statusBreakdown.map((s) => (
-              <div key={s.name} className="flex items-center gap-1.5 text-xs text-slate-500 truncate">
-                <span style={{ width: 7, height: 7, borderRadius: 2, background: s.color, flexShrink: 0, display: "inline-block" }} />
-                {s.name} <span className="font-semibold text-slate-700 ml-auto pl-2">{s.value}</span>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+            {statusBreakdown.slice(0, 5).map((s) => (
+              <div key={s.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: 2, background: s.color, display: "inline-block", flexShrink: 0 }} />
+                  <span style={{ color: "rgba(255,255,255,0.5)" }}>{s.name}</span>
+                </div>
+                <span style={{ fontWeight: 700, color: "#fff" }}>{s.value}</span>
               </div>
             ))}
           </div>
         </div>
-      </CardShell>
+      </ChartCard>
 
-      {/* Service type breakdown */}
-      <CardShell
-        title="Service Types"
-        kpi={topService.name}
-        sub="Most common this month"
-      >
+      {/* Service type horizontal bars */}
+      <ChartCard title="Service Types" kpi={topService.name} sub="Most common this month" accent="#F9A825">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={serviceBreakdown} layout="vertical" barCategoryGap="20%">
-            <Tooltip
-              content={({ active, payload }) =>
-                active && payload?.length ? (
-                  <div className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs shadow-sm">
-                    <div className="font-semibold text-slate-700">{payload[0].payload.name}</div>
-                    <div style={{ color: payload[0].payload.color }}>{payload[0].value} rides</div>
-                  </div>
-                ) : null
-              }
-            />
-            <Bar dataKey="value" radius={[0, 3, 3, 0]}>
-              {serviceBreakdown.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+          <BarChart data={serviceBreakdown} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
+            <XAxis type="number" hide />
+            <YAxis type="category" dataKey="name" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} width={72} />
+            <Tooltip content={({ active, payload }) =>
+              active && payload?.length
+                ? <div style={TOOLTIP_STYLE}><span style={{ color: payload[0].payload.color }}>{payload[0].payload.name}: </span>{payload[0].value} rides</div>
+                : null
+            } />
+            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={10}>
+              {serviceBreakdown.map((e) => <Cell key={e.name} fill={e.color} />)}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-      </CardShell>
+      </ChartCard>
 
     </div>
   );
