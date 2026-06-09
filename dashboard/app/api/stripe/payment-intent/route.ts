@@ -1,8 +1,11 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", { apiVersion: "2026-05-27.dahlia" });
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-05-27.dahlia" });
+}
 
 const DEFAULTS: Record<string, string> = {
   AMBULATORY_RATE: "35", WHEELCHAIR_RATE: "45", STRETCHER_RATE: "145",
@@ -69,7 +72,7 @@ export async function POST(req: Request) {
   });
 
   // Create Stripe PaymentIntent
-  const intent = await stripe.paymentIntents.create({
+  const intent = await getStripe().paymentIntents.create({
     amount: Math.round(total * 100), // cents
     currency: "usd",
     metadata: { invoiceId: invoice.id, invoiceNum: invoice.invoiceNum },
