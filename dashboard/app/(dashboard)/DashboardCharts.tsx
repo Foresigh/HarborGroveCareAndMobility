@@ -62,7 +62,7 @@ function ChartCard({ title, kpi, sub, accent, children }: {
         </div>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: accent, boxShadow: `0 0 10px ${accent}` }} />
       </div>
-      <div style={{ height: 90, minHeight: 90 }}>{children}</div>
+      <div style={{ height: 90 }}>{children}</div>
     </div>
   );
 }
@@ -70,6 +70,24 @@ function ChartCard({ title, kpi, sub, accent, children }: {
 export function DashboardCharts({ weekRides, monthRevenue, statusBreakdown, serviceBreakdown }: Props) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  // During SSR and first paint, return a placeholder — Recharts must not run
+  // without real DOM dimensions or it emits width/height -1 warnings.
+  if (!mounted) {
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} style={{
+            background: "linear-gradient(135deg, #111d35 0%, #0d1628 100%)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: 16,
+            padding: "20px 20px 14px",
+            height: 160,
+          }} />
+        ))}
+      </div>
+    );
+  }
 
   const totalWeekRides   = weekRides.reduce((s, d) => s + d.rides, 0);
   const totalRevenue     = monthRevenue.reduce((s, d) => s + d.revenue, 0);
@@ -82,7 +100,7 @@ export function DashboardCharts({ weekRides, monthRevenue, statusBreakdown, serv
 
       {/* Rides this week — area chart */}
       <ChartCard title="Rides This Week" kpi={String(totalWeekRides)} sub="Last 7 days" accent="#3b82f6">
-        <ResponsiveContainer width="100%" height={mounted ? "100%" : 0}>
+        <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={weekRides} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
@@ -102,7 +120,7 @@ export function DashboardCharts({ weekRides, monthRevenue, statusBreakdown, serv
       <ChartCard title="Revenue This Month"
         kpi={`$${totalRevenue.toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
         sub="From completed rides" accent="#10b981">
-        <ResponsiveContainer width="100%" height={mounted ? "100%" : 0}>
+        <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={monthRevenue} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
@@ -121,7 +139,7 @@ export function DashboardCharts({ weekRides, monthRevenue, statusBreakdown, serv
       {/* Status donut */}
       <ChartCard title="Ride Status Mix" kpi={String(totalStatusRides)} sub="This month" accent="#a855f7">
         <div style={{ display: "flex", alignItems: "center", gap: 12, height: "100%" }}>
-          <ResponsiveContainer width={88} height={mounted ? "100%" : 0}>
+          <ResponsiveContainer width={88} height="100%">
             <PieChart>
               <Pie data={statusBreakdown} dataKey="value" innerRadius={26} outerRadius={40} strokeWidth={0}>
                 {statusBreakdown.map((e) => <Cell key={e.name} fill={e.color} />)}
@@ -149,7 +167,7 @@ export function DashboardCharts({ weekRides, monthRevenue, statusBreakdown, serv
 
       {/* Service type horizontal bars */}
       <ChartCard title="Service Types" kpi={topService.name} sub="Most common this month" accent="#F9A825">
-        <ResponsiveContainer width="100%" height={mounted ? "100%" : 0}>
+        <ResponsiveContainer width="100%" height="100%">
           <BarChart data={serviceBreakdown} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
             <XAxis type="number" hide />
             <YAxis type="category" dataKey="name" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} width={72} />
