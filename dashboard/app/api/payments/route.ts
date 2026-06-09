@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   const includedMiles = n("INCLUDED_MILES", 10);
 
   const base    = baseRates[serviceType] ?? 35;
-  const totalMi = Number(miles) || 0;
+  const totalMi = (miles !== null && miles !== undefined && miles !== "") ? Math.max(0, Number(miles) || 0) : 0;
   const isRound = tripType === "ROUND_TRIP";
   const billableMiles = Math.max(0, totalMi - includedMiles);
   const subtotal = (isRound ? base * 2 : base) + billableMiles * mileageRate;
