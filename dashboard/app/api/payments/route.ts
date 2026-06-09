@@ -19,27 +19,21 @@ function invoiceNum(): string {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { clientId, serviceType, tripType, miles, serviceDate, paymentMethod, notes } = body;
+  const { clientId, serviceType, tripType, miles, customRate, serviceDate, paymentMethod, notes } = body;
 
   const rows = await prisma.setting.findMany();
   const s: Record<string, string> = { ...DEFAULTS };
   for (const r of rows) s[r.key] = r.value;
 
   const n = (k: string, d: number) => { const x = Number(s[k]); return isNaN(x) ? d : x; };
-  const baseRates: Record<string, number> = {
-    AMBULATORY: n("AMBULATORY_RATE", 35),
-    WHEELCHAIR: n("WHEELCHAIR_RATE", 45),
-    STRETCHER:  n("STRETCHER_RATE", 145),
-  };
   const mileageRate   = n("MILEAGE_RATE", 3.65);
   const includedMiles = n("INCLUDED_MILES", 10);
 
-  const base    = baseRates[serviceType] ?? 35;
+  const base    = Math.max(0, Number(customRate) || 0);
   const totalMi = (miles !== null && miles !== undefined && miles !== "") ? Math.max(0, Number(miles) || 0) : 0;
   const isRound = tripType === "ROUND_TRIP";
-  const billableMiles = Math.max(0, totalMi - includedMiles);
-  const subtotal = (isRound ? base * 2 : base) + billableMiles * mileageRate;
-  const total = Math.round(subtotal * 100) / 100;
+  const billableMiles = totalMi === 0 ? 0 : Math.max(0, totalMi - includedMiles);
+  const total = totalMi === 0 ? 0 : Math.round(((isRound ? base * 2 : base) + billableMiles * mileageRate) * 100) / 100;
 
   const svcLabel =
     serviceType === "AMBULATORY" ? "Ambulatory" :

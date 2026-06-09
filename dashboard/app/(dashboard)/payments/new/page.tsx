@@ -20,39 +20,39 @@ type Tab         = "charge" | "link";
 
 const SERVICE_LABELS: Record<ServiceType, string> = { AMBULATORY: "Ambulatory", WHEELCHAIR: "Wheelchair", STRETCHER: "Stretcher" };
 
-function calcPrice(rates: Rates, service: ServiceType, trip: TripType, miles: number) {
-  const base = service === "AMBULATORY" ? rates.AMBULATORY_RATE : service === "WHEELCHAIR" ? rates.WHEELCHAIR_RATE : rates.STRETCHER_RATE;
-  const isRound = trip === "ROUND_TRIP";
-  const billable = Math.max(0, miles - rates.INCLUDED_MILES);
-  const mileageCharge = billable * rates.MILEAGE_RATE;
-  const baseTotal = isRound ? base * 2 : base;
-  return { base, baseTotal, mileageCharge, billable, total: Math.round((baseTotal + mileageCharge) * 100) / 100 };
+// miles = 0 → $0 total (no trip). miles > 0 → base rate + mileage surcharge.
+function calcPrice(customRate: number, mileageRate: number, includedMiles: number, trip: TripType, miles: number) {
+  if (miles === 0) return { baseTotal: 0, mileageCharge: 0, billable: 0, total: 0 };
+  const isRound       = trip === "ROUND_TRIP";
+  const billable      = Math.max(0, miles - includedMiles);
+  const mileageCharge = billable * mileageRate;
+  const baseTotal     = isRound ? customRate * 2 : customRate;
+  return { baseTotal, mileageCharge, billable, total: Math.round((baseTotal + mileageCharge) * 100) / 100 };
 }
 
-// ── Stripe card form (inner component needs stripe context) ─────────────────
+function defaultRate(rates: Rates, service: ServiceType) {
+  if (service === "AMBULATORY") return rates.AMBULATORY_RATE;
+  if (service === "WHEELCHAIR") return rates.WHEELCHAIR_RATE;
+  return rates.STRETCHER_RATE;
+}
+
+// ── Stripe card form ────────────────────────────────────────────────────────
 function ChargeForm({ clientSecret, invoiceNum, total, onSuccess }: {
   clientSecret: string; invoiceNum: string; total: number; onSuccess: () => void;
 }) {
   const stripe   = useStripe();
   const elements = useElements();
-  const [error, setError]     = useState("");
+  const [error, setError]       = useState("");
   const [charging, setCharging] = useState(false);
 
   async function handleCharge(e: React.FormEvent) {
     e.preventDefault();
     if (!stripe || !elements) return;
-    setCharging(true);
-    setError("");
-    const result = await stripe.confirmPayment({
-      elements,
-      redirect: "if_required",
-    });
+    setCharging(true); setError("");
+    const result = await stripe.confirmPayment({ elements, redirect: "if_required" });
     setCharging(false);
-    if (result.error) {
-      setError(result.error.message ?? "Payment failed");
-    } else {
-      onSuccess();
-    }
+    if (result.error) setError(result.error.message ?? "Payment failed");
+    else onSuccess();
   }
 
   return (
@@ -61,9 +61,7 @@ function ChargeForm({ clientSecret, invoiceNum, total, onSuccess }: {
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Card Details</p>
         <PaymentElement options={{ layout: "tabs" }} />
       </div>
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>
-      )}
+      {error && <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>}
       <button type="submit" disabled={charging || !stripe}
         style={{ background: NAVY }} className="w-full text-white font-bold py-3.5 rounded-xl text-sm hover:opacity-90 transition disabled:opacity-60">
         {charging ? "Processing…" : `Charge $${total.toFixed(2)}`}
@@ -77,59 +75,73 @@ function ChargeForm({ clientSecret, invoiceNum, total, onSuccess }: {
 export default function QuickPaymentPage() {
   const router = useRouter();
 
-  const [rates, setRates]       = useState<Rates>({ AMBULATORY_RATE: 35, WHEELCHAIR_RATE: 45, STRETCHER_RATE: 145, MILEAGE_RATE: 3.65, INCLUDED_MILES: 10 });
-  const [clients, setClients]   = useState<Client[]>([]);
-  const [tab, setTab]           = useState<Tab>("charge");
+  const [rates, setRates]         = useState<Rates>({ AMBULATORY_RATE: 35, WHEELCHAIR_RATE: 45, STRETCHER_RATE: 145, MILEAGE_RATE: 3.65, INCLUDED_MILES: 10 });
+  const [clients, setClients]     = useState<Client[]>([]);
+  const [tab, setTab]             = useState<Tab>("charge");
 
   // Trip fields
-  const [clientId, setClientId] = useState("");
-  const [service, setService]   = useState<ServiceType>("AMBULATORY");
-  const [trip, setTrip]         = useState<TripType>("ONE_WAY");
-  const [miles, setMiles]       = useState("");
-  const [serviceDate, setDate]  = useState(new Date().toISOString().slice(0, 10));
-  const [notes, setNotes]       = useState("");
+  const [clientId, setClientId]   = useState("");
+  const [service, setService]     = useState<ServiceType>("AMBULATORY");
+  const [customRate, setCustomRate] = useState<string>("35");
+  const [trip, setTrip]           = useState<TripType>("ONE_WAY");
+  const [miles, setMiles]         = useState("");
+  const [serviceDate, setDate]    = useState(new Date().toISOString().slice(0, 10));
+  const [notes, setNotes]         = useState("");
 
   // Charge Now state
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [pendingInvoice, setPending]    = useState<{ invoiceNum: string; total: number } | null>(null);
-  const [preparing, setPreparing]       = useState(false);
-  const [chargeSuccess, setChargeSuccess] = useState(false);
+  const [clientSecret, setClientSecret]     = useState<string | null>(null);
+  const [pendingInvoice, setPending]         = useState<{ invoiceNum: string; total: number } | null>(null);
+  const [preparing, setPreparing]           = useState(false);
+  const [chargeSuccess, setChargeSuccess]   = useState(false);
 
   // Send Link state
-  const [linkEmail, setLinkEmail]   = useState("");
-  const [linkPhone, setLinkPhone]   = useState("");
-  const [sending, setSending]       = useState(false);
+  const [linkEmail, setLinkEmail] = useState("");
+  const [linkPhone, setLinkPhone] = useState("");
+  const [sending, setSending]     = useState(false);
   const [linkResult, setLinkResult] = useState<{ url: string; invoiceNum: string; total: number } | null>(null);
-  const [copied, setCopied]         = useState(false);
+  const [copied, setCopied]       = useState(false);
 
   useEffect(() => {
     const n = (v: string, d: number) => { const x = Number(v); return isNaN(x) ? d : x; };
-    fetch("/api/settings").then(r => r.json()).then(d => setRates({
-      AMBULATORY_RATE: n(d.AMBULATORY_RATE, 35), WHEELCHAIR_RATE: n(d.WHEELCHAIR_RATE, 45),
-      STRETCHER_RATE: n(d.STRETCHER_RATE, 145), MILEAGE_RATE: n(d.MILEAGE_RATE, 3.65),
-      INCLUDED_MILES: n(d.INCLUDED_MILES, 10),
-    }));
-    fetch("/api/clients").then(r => r.json()).then(d => {
-      if (Array.isArray(d)) setClients(d);
+    fetch("/api/settings").then(r => r.json()).then(d => {
+      const loaded: Rates = {
+        AMBULATORY_RATE: n(d.AMBULATORY_RATE, 35), WHEELCHAIR_RATE: n(d.WHEELCHAIR_RATE, 45),
+        STRETCHER_RATE: n(d.STRETCHER_RATE, 145), MILEAGE_RATE: n(d.MILEAGE_RATE, 3.65),
+        INCLUDED_MILES: n(d.INCLUDED_MILES, 10),
+      };
+      setRates(loaded);
+      setCustomRate(String(loaded.AMBULATORY_RATE));
     });
+    fetch("/api/clients").then(r => r.json()).then(d => { if (Array.isArray(d)) setClients(d); });
   }, []);
 
-  // Auto-fill contact when client is selected
+  // When service type changes, reset customRate to that service's settings value
+  function handleServiceChange(s: ServiceType) {
+    setService(s);
+    setCustomRate(String(defaultRate(rates, s)));
+  }
+
+  // Auto-fill contact when client selected
   useEffect(() => {
     if (!clientId) return;
     const c = clients.find(cl => cl.id === clientId);
-    if (c) {
-      if (c.email) setLinkEmail(c.email);
-      if (c.phone) setLinkPhone(c.phone);
-    }
+    if (c) { if (c.email) setLinkEmail(c.email); if (c.phone) setLinkPhone(c.phone); }
   }, [clientId, clients]);
 
-  const mi   = Number(miles) || 0;
-  const calc = calcPrice(rates, service, trip, mi);
+  const mi         = miles === "" ? 0 : Math.max(0, Number(miles) || 0);
+  const rateNum    = Math.max(0, Number(customRate) || 0);
+  const calc       = calcPrice(rateNum, rates.MILEAGE_RATE, rates.INCLUDED_MILES, trip, mi);
 
-  const tripPayload = () => ({ clientId: clientId || null, serviceType: service, tripType: trip, miles: mi, serviceDate, notes });
+  const tripPayload = () => ({
+    clientId: clientId || null,
+    serviceType: service,
+    tripType: trip,
+    miles: mi,
+    customRate: rateNum,
+    serviceDate,
+    notes,
+  });
 
-  // Prepare Stripe PaymentIntent for Charge Now
   async function handlePrepareCharge() {
     setPreparing(true);
     const res  = await fetch("/api/stripe/payment-intent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tripPayload()) });
@@ -138,12 +150,8 @@ export default function QuickPaymentPage() {
     if (res.ok) { setClientSecret(data.clientSecret); setPending({ invoiceNum: data.invoiceNum, total: data.total }); }
   }
 
-  function handleChargeSuccess() {
-    setChargeSuccess(true);
-    setClientSecret(null);
-  }
+  function handleChargeSuccess() { setChargeSuccess(true); setClientSecret(null); }
 
-  // Generate payment link
   async function handleSendLink(e: React.FormEvent) {
     e.preventDefault();
     setSending(true);
@@ -159,8 +167,7 @@ export default function QuickPaymentPage() {
   function copyLink() {
     if (!linkResult) return;
     navigator.clipboard.writeText(linkResult.url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied(true); setTimeout(() => setCopied(false), 2000);
   }
 
   function resetAll() {
@@ -171,7 +178,7 @@ export default function QuickPaymentPage() {
   const segBtn = (active: boolean) =>
     `flex-1 py-2 text-sm font-medium rounded-lg transition-all ${active ? "text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"}`;
 
-  // ── Trip detail card (shared) ─────────────────────────────────────────────
+  // ── Shared trip form ────────────────────────────────────────────────────────
   const TripCard = (
     <>
       {/* Client + Date */}
@@ -191,17 +198,38 @@ export default function QuickPaymentPage() {
         </div>
       </div>
 
-      {/* Service type */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Service Type</label>
-        <div className="grid grid-cols-3 gap-2">
-          {(["AMBULATORY", "WHEELCHAIR", "STRETCHER"] as ServiceType[]).map(s => (
-            <button key={s} type="button" onClick={() => setService(s)}
-              className={`rounded-xl border-2 p-3 text-center transition-all ${service === s ? "border-[#F9A825] bg-[#FEF9EC]" : "border-slate-200 hover:border-slate-300"}`}>
-              <div className={`text-sm font-semibold ${service === s ? NAVY : "text-slate-700"}`} style={service === s ? { color: NAVY } : {}}>{SERVICE_LABELS[s]}</div>
-              <div className="text-xs text-slate-500 mt-0.5">${rates[`${s}_RATE` as keyof Rates]}/trip</div>
-            </button>
-          ))}
+      {/* Service type + editable rate */}
+      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Service Type</label>
+          <div className="grid grid-cols-3 gap-2">
+            {(["AMBULATORY", "WHEELCHAIR", "STRETCHER"] as ServiceType[]).map(s => (
+              <button key={s} type="button" onClick={() => handleServiceChange(s)}
+                className={`rounded-xl border-2 p-3 text-center transition-all ${service === s ? "border-[#F9A825] bg-[#FEF9EC]" : "border-slate-200 hover:border-slate-300"}`}>
+                <div className={`text-sm font-semibold ${service === s ? "" : "text-slate-700"}`} style={service === s ? { color: NAVY } : {}}>
+                  {SERVICE_LABELS[s]}
+                </div>
+                <div className="text-xs text-slate-400 mt-0.5">${defaultRate(rates, s)} default</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Editable rate for selected service */}
+        <div className="flex items-center justify-between gap-4 bg-slate-50 rounded-lg px-4 py-3">
+          <div>
+            <div className="text-sm font-semibold text-slate-700">{SERVICE_LABELS[service]} Rate</div>
+            <div className="text-xs text-slate-400 mt-0.5">Edit to override for this trip</div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-semibold text-slate-500">$</span>
+            <input
+              type="number" min="0" step="0.01"
+              value={customRate}
+              onChange={e => setCustomRate(e.target.value)}
+              className="border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#F9A825] w-24 text-right"
+            />
+          </div>
         </div>
       </div>
 
@@ -224,27 +252,38 @@ export default function QuickPaymentPage() {
         </div>
       </div>
 
-      {/* Live price */}
+      {/* Live price breakdown */}
       <div className="rounded-xl border-2 p-5 space-y-2.5" style={{ borderColor: GOLD, background: "#FFFBF0" }}>
         <div className="flex items-center gap-2 mb-3">
           <div style={{ width: 4, height: 16, background: `linear-gradient(180deg,${GOLD},${NAVY})`, borderRadius: 2 }} />
           <span className="text-sm font-semibold text-slate-700">Price Breakdown</span>
         </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-slate-600">{SERVICE_LABELS[service]} base {trip === "ROUND_TRIP" ? "(×2)" : "(×1)"}</span>
-          <span className="font-medium text-slate-800">${calc.baseTotal.toFixed(2)}</span>
-        </div>
-        {calc.billable > 0 ? (
+
+        {mi === 0 ? (
           <div className="flex justify-between text-sm">
-            <span className="text-slate-600">Mileage ({calc.billable.toFixed(1)} mi × ${rates.MILEAGE_RATE})</span>
-            <span className="font-medium text-slate-800">+${calc.mileageCharge.toFixed(2)}</span>
-          </div>
-        ) : (
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-400 italic">{mi > 0 ? `${mi} mi within ${rates.INCLUDED_MILES}-mile free zone` : `First ${rates.INCLUDED_MILES} miles free`}</span>
+            <span className="text-slate-400 italic">No miles entered — enter miles to calculate</span>
             <span className="text-slate-400">$0.00</span>
           </div>
+        ) : (
+          <>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-600">{SERVICE_LABELS[service]} rate {trip === "ROUND_TRIP" ? "(×2)" : "(×1)"}</span>
+              <span className="font-medium text-slate-800">${calc.baseTotal.toFixed(2)}</span>
+            </div>
+            {calc.billable > 0 ? (
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Mileage ({calc.billable.toFixed(1)} mi × ${rates.MILEAGE_RATE})</span>
+                <span className="font-medium text-slate-800">+${calc.mileageCharge.toFixed(2)}</span>
+              </div>
+            ) : (
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400 italic">{mi} mi within {rates.INCLUDED_MILES}-mile free zone</span>
+                <span className="text-slate-400">$0.00</span>
+              </div>
+            )}
+          </>
         )}
+
         <div className="border-t border-amber-200 pt-2.5 flex justify-between">
           <span className="font-bold text-slate-800">Total</span>
           <span className="font-bold text-xl" style={{ color: NAVY }}>${calc.total.toFixed(2)}</span>
@@ -260,7 +299,7 @@ export default function QuickPaymentPage() {
     </>
   );
 
-  // ── Charge success ─────────────────────────────────────────────────────────
+  // ── Charge success screen ───────────────────────────────────────────────────
   if (chargeSuccess && pendingInvoice) {
     return (
       <div className="max-w-md mx-auto mt-12">
@@ -306,37 +345,28 @@ export default function QuickPaymentPage() {
         </button>
       </div>
 
-      {/* ── Charge Now tab ─────────────────────────────────────────────────── */}
+      {/* Charge Now tab */}
       {tab === "charge" && (
         <div className="space-y-5">
           {TripCard}
-
           {!clientSecret && (
             <button type="button" onClick={handlePrepareCharge} disabled={preparing}
               style={{ background: NAVY }} className="w-full text-white font-bold py-3.5 rounded-xl text-sm hover:opacity-90 transition disabled:opacity-60">
               {preparing ? "Preparing…" : `Enter Card Details — $${calc.total.toFixed(2)}`}
             </button>
           )}
-
           {clientSecret && pendingInvoice && (
             <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe", variables: { colorPrimary: NAVY, borderRadius: "8px" } } }}>
-              <ChargeForm
-                clientSecret={clientSecret}
-                invoiceNum={pendingInvoice.invoiceNum}
-                total={pendingInvoice.total}
-                onSuccess={handleChargeSuccess}
-              />
+              <ChargeForm clientSecret={clientSecret} invoiceNum={pendingInvoice.invoiceNum} total={pendingInvoice.total} onSuccess={handleChargeSuccess} />
             </Elements>
           )}
         </div>
       )}
 
-      {/* ── Send Link tab ──────────────────────────────────────────────────── */}
+      {/* Send Link tab */}
       {tab === "link" && (
         <form onSubmit={handleSendLink} className="space-y-5">
           {TripCard}
-
-          {/* Contact info */}
           <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Send link to client</p>
             <div>
@@ -352,7 +382,6 @@ export default function QuickPaymentPage() {
             <p className="text-xs text-slate-400">Leave blank to just generate the link and copy it manually.</p>
           </div>
 
-          {/* Link result */}
           {linkResult && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-5 space-y-3">
               <div className="flex items-center gap-2 text-green-700 font-semibold text-sm">
@@ -361,12 +390,10 @@ export default function QuickPaymentPage() {
               </div>
               <div className="bg-white rounded-lg border border-green-200 px-3 py-2.5 text-xs font-mono text-slate-600 break-all">{linkResult.url}</div>
               <div className="flex gap-2">
-                <button type="button" onClick={copyLink}
-                  className="flex-1 border border-green-300 text-green-700 font-medium py-2 rounded-lg text-sm hover:bg-green-100 transition">
+                <button type="button" onClick={copyLink} className="flex-1 border border-green-300 text-green-700 font-medium py-2 rounded-lg text-sm hover:bg-green-100 transition">
                   {copied ? "Copied!" : "Copy Link"}
                 </button>
-                <a href={linkResult.url} target="_blank" rel="noreferrer"
-                  className="flex-1 text-center border border-green-300 text-green-700 font-medium py-2 rounded-lg text-sm hover:bg-green-100 transition">
+                <a href={linkResult.url} target="_blank" rel="noreferrer" className="flex-1 text-center border border-green-300 text-green-700 font-medium py-2 rounded-lg text-sm hover:bg-green-100 transition">
                   Open Link
                 </a>
               </div>
@@ -375,15 +402,12 @@ export default function QuickPaymentPage() {
           )}
 
           {!linkResult && (
-            <button type="submit" disabled={sending}
-              style={{ background: NAVY }} className="w-full text-white font-bold py-3.5 rounded-xl text-sm hover:opacity-90 transition disabled:opacity-60">
+            <button type="submit" disabled={sending} style={{ background: NAVY }} className="w-full text-white font-bold py-3.5 rounded-xl text-sm hover:opacity-90 transition disabled:opacity-60">
               {sending ? "Generating…" : `Generate Payment Link — $${calc.total.toFixed(2)}`}
             </button>
           )}
-
           {linkResult && (
-            <button type="button" onClick={resetAll}
-              className="w-full border border-slate-200 text-slate-700 font-medium py-2.5 rounded-xl text-sm hover:bg-slate-50 transition">
+            <button type="button" onClick={resetAll} className="w-full border border-slate-200 text-slate-700 font-medium py-2.5 rounded-xl text-sm hover:bg-slate-50 transition">
               Start New Payment
             </button>
           )}
