@@ -1,19 +1,27 @@
 import twilio from "twilio";
 
+function normalize(to: string): string | null {
+  const n = /^\+/.test(to) ? to : `+1${to.replace(/\D/g, "")}`;
+  return n.replace(/\D/g, "").length >= 10 ? n : null;
+}
+
 export async function sendSms(to: string, body: string): Promise<void> {
   const sid   = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_AUTH_TOKEN;
   const from  = process.env.TWILIO_FROM;
   if (!sid || !token || !from || !to) return;
-
-  // Normalize to E.164 if bare 10-digit number passed
-  const normalized = /^\+/.test(to) ? to : `+1${to.replace(/\D/g, "")}`;
-  if (normalized.replace(/\D/g, "").length < 10) return;
-
+  const normalized = normalize(to);
+  if (!normalized) return;
   try {
-    const client = twilio(sid, token);
-    await client.messages.create({ body, from, to: normalized });
+    await twilio(sid, token).messages.create({ body, from, to: normalized });
   } catch (err) {
     console.error("SMS error:", err);
   }
+}
+
+// Sends to all numbers in NOTIFY_PHONE (comma-separated list supported)
+export async function notifyOwners(body: string): Promise<void> {
+  const raw = process.env.NOTIFY_PHONE ?? "";
+  const numbers = raw.split(",").map(n => n.trim()).filter(Boolean);
+  await Promise.all(numbers.map(n => sendSms(n, body)));
 }

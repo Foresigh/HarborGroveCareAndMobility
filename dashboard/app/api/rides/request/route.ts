@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { RideType } from "@/lib/generated/prisma/enums";
-import { sendSms } from "@/lib/sms";
+import { sendSms, notifyOwners } from "@/lib/sms";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -76,8 +76,7 @@ export async function POST(req: NextRequest) {
       notes ? `Notes: ${notes}` : null,
     ].filter(Boolean).join("\n");
 
-    const notifyPhone = process.env.NOTIFY_PHONE;
-    if (notifyPhone) await sendSms(notifyPhone, ownerMsg);
+    await notifyOwners(ownerMsg);
 
     // SMS confirmation to client
     await sendSms(
