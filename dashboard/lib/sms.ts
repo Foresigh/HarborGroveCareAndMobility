@@ -13,9 +13,11 @@ export async function sendSms(to: string, body: string): Promise<void> {
   const normalized = normalize(to);
   if (!normalized) return;
   try {
-    await twilio(sid, token).messages.create({ body, from, to: normalized });
-  } catch (err) {
-    console.error("SMS error:", err);
+    const msg = await twilio(sid, token).messages.create({ body, from, to: normalized });
+    console.log(`SMS sent to ${normalized} — SID: ${msg.sid} status: ${msg.status}`);
+  } catch (err: unknown) {
+    const e = err as { code?: number; message?: string; status?: number };
+    console.error(`SMS FAILED to ${normalized} — code: ${e?.code} status: ${e?.status} message: ${e?.message}`);
   }
 }
 
