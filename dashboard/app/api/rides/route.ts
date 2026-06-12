@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { RideStatus, RideType, BillingType } from "@/lib/generated/prisma/enums";
+import { sendSms } from "@/lib/sms";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -38,5 +39,17 @@ export async function POST(req: Request) {
       amount: body.amount ? parseFloat(body.amount) : null,
     },
   });
+  // SMS confirmation to client
+  const client = await prisma.client.findUnique({ where: { id: ride.clientId } });
+  if (client?.phone) {
+    const dt = new Date(ride.scheduledAt);
+    const dateStr = dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    const timeStr = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    await sendSms(
+      client.phone,
+      `CONFIRMED - Harbor Grove Care & Mobility\nHi ${client.firstName}, your ride is confirmed.\nDate: ${dateStr} at ${timeStr}\nFrom: ${ride.pickupAddress}\nTo: ${ride.dropoffAddress}\nQuestions? Reply STOP to opt out.`
+    );
+  }
+
   return NextResponse.json(ride, { status: 201 });
 }

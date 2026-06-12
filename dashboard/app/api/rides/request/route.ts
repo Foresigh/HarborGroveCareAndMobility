@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { RideType } from "@/lib/generated/prisma/enums";
-import twilio from "twilio";
+import { sendSms } from "@/lib/sms";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -32,17 +32,10 @@ export async function POST(req: NextRequest) {
     let client = await prisma.client.findFirst({ where: { phone } });
     if (!client) {
       client = await prisma.client.create({
-        data: {
-          firstName,
-          lastName,
-          phone,
-          mobilityNeeds: mobility || null,
-          billingType: "PRIVATE_PAY",
-        },
+        data: { firstName, lastName, phone, mobilityNeeds: mobility || null, billingType: "PRIVATE_PAY" },
       });
     }
 
-    // Build scheduledAt — default to 09:00 if no time provided
     const [year, month, day] = date.split("-").map(Number);
     const [hour, minute] = (time || "09:00").split(":").map(Number);
     const scheduledAt = new Date(year, month - 1, day, hour, minute);
@@ -63,39 +56,34 @@ export async function POST(req: NextRequest) {
     await prisma.notification.create({
       data: {
         title: "New Ride Request",
-        message: `${firstName} ${lastName} requested a ride on ${new Date(scheduledAt).toLocaleDateString()} at ${new Date(scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+        message: `${firstName} ${lastName} requested a ride on ${scheduledAt.toLocaleDateString()} at ${scheduledAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
         type: "INFO",
         link: `/rides/${ride.id}`,
       },
     });
 
-    // Send SMS notification to owner
-    const sid = process.env.TWILIO_ACCOUNT_SID;
-    const token = process.env.TWILIO_AUTH_TOKEN;
-    const from = process.env.TWILIO_FROM;
-    const to = process.env.NOTIFY_PHONE;
+    // SMS to owner
+    const dateStr = scheduledAt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    const timeStr = scheduledAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const ownerMsg = [
+      `NEW RIDE REQUEST - HarborGrove`,
+      `Name: ${firstName} ${lastName}`,
+      `Phone: ${phone}`,
+      `Date: ${dateStr} at ${timeStr}`,
+      `From: ${pickup}`,
+      `To: ${destination}`,
+      mobility ? `Mobility: ${mobility}` : null,
+      notes ? `Notes: ${notes}` : null,
+    ].filter(Boolean).join("\n");
 
-    if (sid && token && from && to) {
-      try {
-        const apptDate = new Date(scheduledAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-        const apptTime = new Date(scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        const smsBody = [
-          `NEW RIDE REQUEST - HarborGrove`,
-          `Name: ${firstName} ${lastName}`,
-          `Phone: ${phone}`,
-          `Date: ${apptDate} at ${apptTime}`,
-          `From: ${pickup}`,
-          `To: ${destination}`,
-          mobility ? `Mobility: ${mobility}` : null,
-          notes ? `Notes: ${notes}` : null,
-        ].filter(Boolean).join("\n");
+    const notifyPhone = process.env.NOTIFY_PHONE;
+    if (notifyPhone) await sendSms(notifyPhone, ownerMsg);
 
-        const client = twilio(sid, token);
-        await client.messages.create({ body: smsBody, from, to });
-      } catch (smsErr) {
-        console.error("Twilio SMS error:", smsErr);
-      }
-    }
+    // SMS confirmation to client
+    await sendSms(
+      phone,
+      `REQUEST RECEIVED - Harbor Grove Care & Mobility\nHi ${firstName}, we received your ride request for ${dateStr} at ${timeStr}. We will confirm shortly.\nQuestions? Reply STOP to opt out.`
+    );
 
     return NextResponse.json({ success: true, rideId: ride.id }, { headers: CORS });
   } catch (err) {
