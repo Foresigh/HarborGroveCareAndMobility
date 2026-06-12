@@ -95,23 +95,19 @@ export async function POST(req: Request) {
 
   await prisma.invoice.update({
     where: { id: invoice.id },
-    data: { stripeId: session.id },
+    data: { stripeId: session.id, stripeUrl: session.url },
   });
 
-  // If phone provided, send SMS via Twilio
-  if (clientPhone && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-    try {
-      const twilio = (await import("twilio")).default;
-      const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-      await client.messages.create({
-        body: `Harbor Grove Care & Mobility — your payment of $${total.toFixed(2)} is ready. Pay securely here: ${session.url}`,
-        from: process.env.TWILIO_FROM,
-        to: clientPhone,
-      });
-    } catch {
-      // SMS failed — still return session URL
-    }
+  const shortUrl = `${baseUrl}/pay/${invoice.invoiceNum}`;
+
+  // SMS the short branded link to client
+  if (clientPhone) {
+    const { sendSms } = await import("@/lib/sms");
+    await sendSms(
+      clientPhone,
+      `Harbor Grove Care & Mobility\nYour payment of $${total.toFixed(2)} is ready.\nPay here: ${shortUrl}\nInvoice ${invoice.invoiceNum}`
+    );
   }
 
-  return NextResponse.json({ url: session.url, invoiceId: invoice.id, invoiceNum: invoice.invoiceNum, total });
+  return NextResponse.json({ url: shortUrl, invoiceId: invoice.id, invoiceNum: invoice.invoiceNum, total });
 }

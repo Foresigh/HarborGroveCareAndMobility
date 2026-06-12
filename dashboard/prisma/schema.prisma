@@ -195,6 +195,7 @@ model Invoice {
   total              Decimal       @db.Decimal(10, 2)
   notes              String?
   stripeId           String?
+  stripeUrl          String?
   sentAt             DateTime?
   paidAt             DateTime?
   items              InvoiceItem[]
