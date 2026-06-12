@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { InvoiceStatus } from "@/lib/generated/prisma/enums";
+import { DeleteInvoiceButton } from "@/components/delete-invoice-button";
 
 const statusColor: Record<InvoiceStatus, string> = {
   DRAFT: "bg-slate-100 text-slate-600",
@@ -104,7 +105,10 @@ export default async function InvoicesPage({
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <Link href={`/invoices/${inv.id}`} className="text-xs text-[#0D2B4E] font-semibold hover:underline">View</Link>
+                      <span className="flex items-center gap-1">
+                        <Link href={`/invoices/${inv.id}`} className="text-xs text-[#0D2B4E] font-semibold hover:underline">View</Link>
+                        <DeleteInvoiceButton id={inv.id} invoiceNum={inv.invoiceNum} />
+                      </span>
                     </td>
                   </tr>
                 );
