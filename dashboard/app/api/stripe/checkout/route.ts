@@ -39,7 +39,8 @@ export async function POST(req: Request) {
 
   const svcLabel  = serviceType === "AMBULATORY" ? "Ambulatory" : serviceType === "WHEELCHAIR" ? "Wheelchair" : "Stretcher";
   const tripLabel = isRound ? "Round Trip" : "One-Way";
-  const baseUrl   = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
+  const reqOrigin = new URL(req.url).origin;
+  const baseUrl   = (process.env.NEXT_PUBLIC_APP_URL ?? reqOrigin).replace(/\/$/, "");
 
   // Create invoice as DRAFT (webhook will mark it PAID)
   const invoice = await prisma.invoice.create({

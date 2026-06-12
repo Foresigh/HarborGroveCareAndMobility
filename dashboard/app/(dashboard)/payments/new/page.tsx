@@ -92,6 +92,7 @@ export default function QuickPaymentPage() {
   const [clientSecret, setClientSecret]     = useState<string | null>(null);
   const [pendingInvoice, setPending]         = useState<{ invoiceNum: string; total: number } | null>(null);
   const [preparing, setPreparing]           = useState(false);
+  const [prepareError, setPrepareError]     = useState("");
   const [chargeSuccess, setChargeSuccess]   = useState(false);
 
   // Send Link state
@@ -99,6 +100,7 @@ export default function QuickPaymentPage() {
   const [linkPhone, setLinkPhone] = useState("");
   const [sending, setSending]     = useState(false);
   const [linkResult, setLinkResult] = useState<{ url: string; invoiceNum: string; total: number } | null>(null);
+  const [linkError, setLinkError] = useState("");
   const [copied, setCopied]       = useState(false);
 
   useEffect(() => {
@@ -144,10 +146,18 @@ export default function QuickPaymentPage() {
 
   async function handlePrepareCharge() {
     setPreparing(true);
-    const res  = await fetch("/api/stripe/payment-intent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tripPayload()) });
-    const data = await res.json();
-    setPreparing(false);
-    if (res.ok) { setClientSecret(data.clientSecret); setPending({ invoiceNum: data.invoiceNum, total: data.total }); }
+    setPrepareError("");
+    try {
+      const res  = await fetch("/api/stripe/payment-intent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tripPayload()) });
+      let data: Record<string, unknown> = {};
+      try { data = await res.json(); } catch { /* non-JSON error body */ }
+      if (res.ok) { setClientSecret(data.clientSecret as string); setPending({ invoiceNum: data.invoiceNum as string, total: data.total as number }); }
+      else setPrepareError((data.error as string) || `Server error (${res.status}) — check Railway logs`);
+    } catch (err) {
+      setPrepareError(err instanceof Error ? err.message : "Network error — try again");
+    } finally {
+      setPreparing(false);
+    }
   }
 
   function handleChargeSuccess() { setChargeSuccess(true); setClientSecret(null); }
@@ -155,13 +165,24 @@ export default function QuickPaymentPage() {
   async function handleSendLink(e: React.FormEvent) {
     e.preventDefault();
     setSending(true);
-    const res  = await fetch("/api/stripe/checkout", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...tripPayload(), clientEmail: linkEmail || null, clientPhone: linkPhone || null }),
-    });
-    const data = await res.json();
-    setSending(false);
-    if (res.ok) setLinkResult({ url: data.url, invoiceNum: data.invoiceNum, total: data.total });
+    setLinkError("");
+    try {
+      const res  = await fetch("/api/stripe/checkout", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...tripPayload(), clientEmail: linkEmail || null, clientPhone: linkPhone || null }),
+      });
+      let data: Record<string, unknown> = {};
+      try { data = await res.json(); } catch { /* non-JSON error body */ }
+      if (res.ok) {
+        setLinkResult({ url: data.url as string, invoiceNum: data.invoiceNum as string, total: data.total as number });
+      } else {
+        setLinkError((data.error as string) || `Server error (${res.status}) — check Railway logs`);
+      }
+    } catch (err) {
+      setLinkError(err instanceof Error ? err.message : "Network error — try again");
+    } finally {
+      setSending(false);
+    }
   }
 
   function copyLink() {
@@ -172,7 +193,7 @@ export default function QuickPaymentPage() {
 
   function resetAll() {
     setClientSecret(null); setPending(null); setChargeSuccess(false);
-    setLinkResult(null); setCopied(false); setMiles("");
+    setLinkResult(null); setCopied(false); setLinkError(""); setPrepareError(""); setMiles("");
   }
 
   const segBtn = (active: boolean) =>
@@ -349,6 +370,9 @@ export default function QuickPaymentPage() {
       {tab === "charge" && (
         <div className="space-y-5">
           {TripCard}
+          {prepareError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{prepareError}</div>
+          )}
           {!clientSecret && (
             <button type="button" onClick={handlePrepareCharge} disabled={preparing}
               style={{ background: NAVY }} className="w-full text-white font-bold py-3.5 rounded-xl text-sm hover:opacity-90 transition disabled:opacity-60">
@@ -401,6 +425,9 @@ export default function QuickPaymentPage() {
             </div>
           )}
 
+          {linkError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{linkError}</div>
+          )}
           {!linkResult && (
             <button type="submit" disabled={sending} style={{ background: NAVY }} className="w-full text-white font-bold py-3.5 rounded-xl text-sm hover:opacity-90 transition disabled:opacity-60">
               {sending ? "Generating…" : `Generate Payment Link — $${calc.total.toFixed(2)}`}
