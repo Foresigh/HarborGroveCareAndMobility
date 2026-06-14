@@ -28,10 +28,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400, headers: CORS });
     }
 
-    // Find or create client by phone — always use the name submitted in the form
+    // Find or create client by phone — never overwrite the name on file
     let client = await prisma.client.findFirst({ where: { phone } });
-    let nameChanged = false;
-    let previousName = "";
+    let phoneConflictNote = "";
     if (!client) {
       client = await prisma.client.create({
         data: { firstName, lastName, phone, mobilityNeeds: mobility || null, billingType: "PRIVATE_PAY" },
@@ -40,13 +39,8 @@ export async function POST(req: NextRequest) {
       const existingName = `${client.firstName} ${client.lastName}`.trim();
       const submittedName = `${firstName} ${lastName}`.trim();
       if (existingName.toLowerCase() !== submittedName.toLowerCase()) {
-        nameChanged = true;
-        previousName = existingName;
+        phoneConflictNote = `⚠️ Phone number already on file under: "${existingName}" — submitted as "${submittedName}"`;
       }
-      client = await prisma.client.update({
-        where: { id: client.id },
-        data: { firstName, lastName, mobilityNeeds: mobility || client.mobilityNeeds },
-      });
     }
 
     const [year, month, day] = date.split("-").map(Number);
@@ -61,7 +55,7 @@ export async function POST(req: NextRequest) {
         scheduledAt,
         rideType: mobilityToRideType(mobility || ""),
         billingType: "PRIVATE_PAY",
-        notes: [notes, nameChanged ? `⚠️ Name changed from "${previousName}" to "${firstName} ${lastName}"` : null].filter(Boolean).join("\n") || null,
+        notes: [notes, phoneConflictNote].filter(Boolean).join("\n") || null,
         status: "SCHEDULED",
       },
     });
