@@ -23,7 +23,7 @@ function mobilityToRideType(mobility: string): RideType {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { firstName, lastName, phone, date, time, pickup, destination, mobility, notes } = body;
+    const { firstName, lastName, phone, email, date, time, pickup, destination, mobility, notes } = body;
 
     if (!firstName || !lastName || !phone || !date || !pickup || !destination) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400, headers: CORS });
@@ -34,9 +34,13 @@ export async function POST(req: NextRequest) {
     let phoneConflictNote = "";
     if (!client) {
       client = await prisma.client.create({
-        data: { firstName, lastName, phone, mobilityNeeds: mobility || null, billingType: "PRIVATE_PAY" },
+        data: { firstName, lastName, phone, email: email || null, mobilityNeeds: mobility || null, billingType: "PRIVATE_PAY" },
       });
     } else {
+      // Save email to existing client if they provided one and we don't have it
+      if (email && !client.email) {
+        client = await prisma.client.update({ where: { id: client.id }, data: { email } });
+      }
       const existingName = `${client.firstName} ${client.lastName}`.trim();
       const submittedName = `${firstName} ${lastName}`.trim();
       if (existingName.toLowerCase() !== submittedName.toLowerCase()) {
@@ -96,8 +100,8 @@ export async function POST(req: NextRequest) {
       phone,
       `REQUEST RECEIVED - Harbor Grove Care & Mobility\nHi ${firstName}, we received your ride request for ${dateStr} at ${timeStr}. We will confirm shortly.\nQuestions? Reply STOP to opt out.`
     );
-    if (body.email) {
-      await sendEmail(body.email, "Ride Request Received — Harbor Grove", rideConfirmedEmail({ firstName, dateStr, timeStr, pickup, dropoff: destination }));
+    if (email) {
+      await sendEmail(email, "Ride Request Received — Harbor Grove", rideConfirmedEmail({ firstName, dateStr, timeStr, pickup, dropoff: destination }));
     }
 
     return NextResponse.json({ success: true, rideId: ride.id }, { headers: CORS });
