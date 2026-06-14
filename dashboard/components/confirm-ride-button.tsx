@@ -13,21 +13,10 @@ export function ConfirmRideButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
-  if (confirmed) {
-    return (
-      <span className="mt-1 flex items-center gap-0.5 text-[10px] font-semibold text-emerald-600">
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-        Confirmed
-      </span>
-    );
-  }
-
   async function handleConfirm(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (loading) return;
+    if (loading || confirmed) return;
     setLoading(true);
     setError(false);
     try {
@@ -41,13 +30,28 @@ export function ConfirmRideButton({
     }
   }
 
+  if (confirmed) {
+    return (
+      <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-2 py-1 w-full justify-center">
+        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        Confirmed
+      </div>
+    );
+  }
+
   return (
     <button
       onClick={handleConfirm}
       disabled={loading}
-      className="mt-1 w-full text-[10px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded px-1 py-0.5 transition-colors disabled:opacity-50 leading-none"
+      className={`w-full text-[11px] font-semibold rounded px-2 py-1 transition-colors leading-none border ${
+        error
+          ? "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100"
+          : "bg-slate-800 border-slate-800 text-white hover:bg-slate-700"
+      } disabled:opacity-40`}
     >
-      {loading ? "…" : error ? "Retry" : "Confirm"}
+      {loading ? "Sending…" : error ? "Failed — Retry" : "Send Confirmation"}
     </button>
   );
 }
