@@ -33,8 +33,7 @@ function layout(body: string): string {
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px;">
 <table width="520" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
   <tr><td style="background:#0D2B4E;padding:24px 32px;text-align:center;">
-    <div style="color:#F9A825;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Harbor Grove</div>
-    <div style="color:#fff;font-size:18px;font-weight:700;margin-top:4px;">Care &amp; Mobility</div>
+    <img src="https://dashboard.harborgrovecareandmobility.com/logo-white.svg" alt="Harbor Grove Care &amp; Mobility" width="180" style="display:block;margin:0 auto;max-width:180px;" />
   </td></tr>
   <tr><td style="padding:32px;">${body}</td></tr>
   <tr><td style="padding:16px 32px 24px;text-align:center;font-size:11px;color:#94a3b8;">
