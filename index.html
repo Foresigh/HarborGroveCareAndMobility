@@ -1142,6 +1142,10 @@
                     <input class="form-input" id="phone" name="phone" type="tel" placeholder="208-555-0100" required />
                   </div>
                   <div class="form-group">
+                    <label class="form-label" for="email">Email <span style="font-weight:400;text-transform:none;letter-spacing:0">(for confirmation)</span></label>
+                    <input class="form-input" id="email" name="email" type="email" placeholder="jane@example.com" />
+                  </div>
+                  <div class="form-group">
                     <label class="form-label" for="date">Appointment Date *</label>
                     <input class="form-input" id="date" name="date" type="date" required />
                   </div>
@@ -1452,13 +1456,14 @@
       btn.disabled = true;
       btn.textContent = 'Submitting…';
       try {
-        const res = await fetch('https://harborgrovecareandmobility-production-28be.up.railway.app/api/rides/request', {
+        const res = await fetch('https://dashboard.harborgrovecareandmobility.com/api/rides/request', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             firstName: data.get('fname'),
             lastName: data.get('lname'),
             phone: data.get('phone'),
+            email: data.get('email') || null,
             date: data.get('date'),
             time: data.get('time'),
             pickup: data.get('pickup'),
@@ -1476,6 +1481,18 @@
         alert('Something went wrong. Please call us at 208-297-3601.');
       }
     }
+  </script>
+  <script>
+    (function() {
+      try {
+        fetch('https://harborgrovecareandmobility-production-28be.up.railway.app/api/analytics/pageview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ page: location.pathname + location.search, referrer: document.referrer || null }),
+          keepalive: true,
+        });
+      } catch(e) {}
+    })();
   </script>
 </body>
 </html>
