@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { RideStatus, RideType, BillingType } from "@/lib/generated/prisma/enums";
 import { sendSms } from "@/lib/sms";
-import { notifyOwnersEmail, rideRequestOwnerEmail } from "@/lib/email";
+import { notifyOwnersEmail, rideRequestOwnerEmail, sendEmail, rideConfirmedEmail } from "@/lib/email";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -52,10 +52,10 @@ export async function POST(req: Request) {
     );
   }
 
-  // Email owner
   const dateStr = new Date(ride.scheduledAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   const timeStr = new Date(ride.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   if (client) {
+    // Email owner
     await notifyOwnersEmail(
       `Ride Booked — ${client.firstName} ${client.lastName}`,
       rideRequestOwnerEmail({
@@ -63,6 +63,14 @@ export async function POST(req: Request) {
         dateStr, timeStr, pickup: ride.pickupAddress, dropoff: ride.dropoffAddress, rideId: ride.id,
       })
     );
+    // Email client confirmation
+    if (client.email) {
+      await sendEmail(
+        client.email,
+        "Your Ride is Confirmed — Harbor Grove Care & Mobility",
+        rideConfirmedEmail({ firstName: client.firstName, dateStr, timeStr, pickup: ride.pickupAddress, dropoff: ride.dropoffAddress })
+      );
+    }
   }
 
   return NextResponse.json(ride, { status: 201 });
