@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { RideStatus, RideType, BillingType } from "@/lib/generated/prisma/enums";
 import { sendSms } from "@/lib/sms";
+import { notifyOwnersEmail, rideRequestOwnerEmail } from "@/lib/email";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -48,6 +49,19 @@ export async function POST(req: Request) {
     await sendSms(
       client.phone,
       `CONFIRMED - Harbor Grove Care & Mobility\nHi ${client.firstName}, your ride is confirmed.\nDate: ${dateStr} at ${timeStr}\nFrom: ${ride.pickupAddress}\nTo: ${ride.dropoffAddress}\nQuestions? Reply STOP to opt out.`
+    );
+  }
+
+  // Email owner
+  const dateStr = new Date(ride.scheduledAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const timeStr = new Date(ride.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  if (client) {
+    await notifyOwnersEmail(
+      `Ride Booked — ${client.firstName} ${client.lastName}`,
+      rideRequestOwnerEmail({
+        firstName: client.firstName, lastName: client.lastName, phone: client.phone ?? "",
+        dateStr, timeStr, pickup: ride.pickupAddress, dropoff: ride.dropoffAddress, rideId: ride.id,
+      })
     );
   }
 
