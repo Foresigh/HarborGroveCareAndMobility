@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { RideType } from "@/lib/generated/prisma/enums";
 import { sendSms, notifyOwners } from "@/lib/sms";
-import { notifyOwnersEmail, rideRequestOwnerEmail, sendEmail, rideConfirmedEmail } from "@/lib/email";
+import { notifyOwnersEmail, rideRequestOwnerEmail, sendEmail, rideRequestClientEmail } from "@/lib/email";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       `REQUEST RECEIVED - Harbor Grove Care & Mobility\nHi ${firstName}, we received your ride request for ${dateStr} at ${timeStr}. We will confirm shortly.\nQuestions? Reply STOP to opt out.`
     );
     if (email) {
-      await sendEmail(email, "Ride Request Received — Harbor Grove", rideConfirmedEmail({ firstName, dateStr, timeStr, pickup, dropoff: destination }));
+      await sendEmail(email, "Ride Request Received — Harbor Grove Care & Mobility", rideRequestClientEmail({ firstName, dateStr, timeStr, pickup, dropoff: destination }));
     }
 
     return NextResponse.json({ success: true, rideId: ride.id }, { headers: CORS });

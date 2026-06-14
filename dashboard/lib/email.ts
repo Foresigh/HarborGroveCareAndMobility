@@ -66,6 +66,23 @@ export function rideConfirmedEmail(opts: {
   `);
 }
 
+export function rideRequestClientEmail(opts: {
+  firstName: string; dateStr: string; timeStr: string;
+  pickup: string; dropoff: string;
+}): string {
+  return layout(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:#0D2B4E;">We Received Your Request</h2>
+    <p style="margin:0 0 24px;font-size:14px;color:#64748b;">Hi ${opts.firstName}, we received your ride request. We will review it and reach out to you shortly to confirm.</p>
+    <table cellpadding="0" cellspacing="0" style="width:100%;border-top:1px solid #f1f5f9;">
+      ${row("Date", opts.dateStr)}
+      ${row("Time", opts.timeStr)}
+      ${row("Pickup", opts.pickup)}
+      ${row("Drop-off", opts.dropoff)}
+    </table>
+    <p style="margin:24px 0 0;font-size:13px;color:#94a3b8;">Questions? Call us or reply to this email.</p>
+  `);
+}
+
 export function rideStatusEmail(opts: { firstName: string; status: string; message: string }): string {
   return layout(`
     <h2 style="margin:0 0 8px;font-size:20px;color:#0D2B4E;">Ride Update</h2>
