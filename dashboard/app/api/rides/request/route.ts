@@ -28,11 +28,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400, headers: CORS });
     }
 
-    // Find or create client by phone
+    // Find or create client by phone — always use the name submitted in the form
     let client = await prisma.client.findFirst({ where: { phone } });
     if (!client) {
       client = await prisma.client.create({
         data: { firstName, lastName, phone, mobilityNeeds: mobility || null, billingType: "PRIVATE_PAY" },
+      });
+    } else {
+      client = await prisma.client.update({
+        where: { id: client.id },
+        data: { firstName, lastName, mobilityNeeds: mobility || client.mobilityNeeds },
       });
     }
 
