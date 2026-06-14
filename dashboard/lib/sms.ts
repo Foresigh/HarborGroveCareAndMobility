@@ -12,8 +12,19 @@ export async function sendSms(to: string, body: string): Promise<void> {
   if (!sid || !token || !from || !to) return;
   const normalized = normalize(to);
   if (!normalized) return;
+
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
+  const statusCallback = baseUrl ? `${baseUrl}/api/twilio/status` : undefined;
+
   try {
-    const msg = await twilio(sid, token).messages.create({ body, from, to: normalized });
+    const params: Parameters<ReturnType<typeof twilio>["messages"]["create"]>[0] = {
+      body,
+      from,
+      to: normalized,
+    };
+    if (statusCallback) params.statusCallback = statusCallback;
+
+    const msg = await twilio(sid, token).messages.create(params);
     console.log(`SMS sent to ${normalized} — SID: ${msg.sid} status: ${msg.status}`);
   } catch (err: unknown) {
     const e = err as { code?: number; message?: string; status?: number };
