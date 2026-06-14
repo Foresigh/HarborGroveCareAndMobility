@@ -39,7 +39,16 @@ const BILLING_TYPES = ["PRIVATE_PAY", "FACILITY", "THIRD_PARTY"];
 export function RideEditForm({ ride, drivers, vehicles }: { ride: Ride; drivers: Driver[]; vehicles: Vehicle[] }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [status, setStatus] = useState(ride.status);
+
+  async function handleDelete() {
+    setDeleting(true);
+    await fetch(`/api/rides/${ride.id}`, { method: "DELETE" });
+    toast.success("Ride deleted");
+    router.push("/calendar");
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -147,14 +156,37 @@ export function RideEditForm({ ride, drivers, vehicles }: { ride: Ride; drivers:
           </div>
         </div>
 
-        <div className="flex gap-3 pt-2">
-          <button type="submit" disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition disabled:opacity-60">
-            {loading ? "Saving…" : "Save Changes"}
-          </button>
-          <Link href="/rides" className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-6 py-2.5 rounded-lg text-sm transition">
-            Cancel
-          </Link>
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex gap-3">
+            <button type="submit" disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition disabled:opacity-60">
+              {loading ? "Saving…" : "Save Changes"}
+            </button>
+            <Link href="/rides" className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-6 py-2.5 rounded-lg text-sm transition">
+              Cancel
+            </Link>
+          </div>
+          {confirmDelete ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Delete this ride?</span>
+              <button type="button" onClick={handleDelete} disabled={deleting}
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition disabled:opacity-60">
+                {deleting ? "Deleting…" : "Yes, delete"}
+              </button>
+              <button type="button" onClick={() => setConfirmDelete(false)}
+                className="text-xs text-slate-500 hover:text-slate-700 px-2 py-1.5">
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setConfirmDelete(true)}
+              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-red-500 transition">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12 1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"/>
+              </svg>
+              Delete Ride
+            </button>
+          )}
         </div>
       </form>
 

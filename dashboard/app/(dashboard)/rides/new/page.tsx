@@ -28,16 +28,17 @@ export default function BookRidePage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading) return; // prevent double-submit
     setLoading(true);
     const fd = new FormData(e.currentTarget);
     const body = Object.fromEntries(fd.entries());
     const res = await fetch("/api/rides", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    setLoading(false);
     if (res.ok) {
       toast.success("Ride booked successfully");
-      router.push("/rides");
+      router.push("/calendar");
     } else {
       toast.error("Failed to book ride");
+      setLoading(false);
     }
   }
 
