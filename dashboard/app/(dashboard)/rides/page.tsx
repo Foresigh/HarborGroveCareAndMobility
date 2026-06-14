@@ -21,8 +21,6 @@ export default async function RideBoardPage({
   const params = await searchParams;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
 
   const dateFilter = params.date
     ? (() => {
@@ -32,7 +30,7 @@ export default async function RideBoardPage({
         nd.setDate(nd.getDate() + 1);
         return { gte: d, lt: nd };
       })()
-    : { gte: today, lt: tomorrow };
+    : { gte: today };
 
   const rides = await prisma.ride.findMany({
     where: {
@@ -93,7 +91,7 @@ export default async function RideBoardPage({
             {rides.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-10 text-center text-slate-400 text-sm">
-                  No rides found for this date
+                  {params.date ? "No rides on this date" : "No upcoming rides"}
                 </td>
               </tr>
             ) : (
