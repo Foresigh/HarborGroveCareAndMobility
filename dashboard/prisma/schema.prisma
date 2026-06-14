@@ -150,6 +150,7 @@ model Ride {
   status          RideStatus    @default(SCHEDULED)
   rideType        RideType      @default(AMBULATORY)
   billingType     BillingType   @default(PRIVATE_PAY)
+  requestedName   String?
   providerName    String?
   providerAddress String?
   notes           String?

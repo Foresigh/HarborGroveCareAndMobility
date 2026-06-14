@@ -25,6 +25,7 @@ interface Ride {
   billingType: string;
   driverId: string | null;
   vehicleId: string | null;
+  requestedName: string | null;
   providerName: string | null;
   amount: unknown;
   notes: string | null;
@@ -76,6 +77,9 @@ export function RideEditForm({ ride, drivers, vehicles }: { ride: Ride; drivers:
         <div>
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Client</div>
           <div className="font-semibold text-slate-800">{ride.client.firstName} {ride.client.lastName}</div>
+          {ride.requestedName && ride.requestedName.toLowerCase() !== `${ride.client.firstName} ${ride.client.lastName}`.toLowerCase() && (
+            <div className="text-xs text-amber-600 font-medium mt-0.5">Booked as: {ride.requestedName}</div>
+          )}
           <div className="text-sm text-slate-500">{ride.client.phone}</div>
         </div>
         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${statusColor[status] ?? "bg-slate-100 text-slate-600"}`}>

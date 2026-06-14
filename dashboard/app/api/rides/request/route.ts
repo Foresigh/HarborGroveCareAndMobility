@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
         pickupAddress: pickup,
         dropoffAddress: destination,
         scheduledAt,
+        requestedName: `${firstName} ${lastName}`,
         rideType: mobilityToRideType(mobility || ""),
         billingType: "PRIVATE_PAY",
         notes: [notes, phoneConflictNote].filter(Boolean).join("\n") || null,

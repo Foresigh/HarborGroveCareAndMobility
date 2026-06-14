@@ -83,7 +83,8 @@ export default async function CalendarPage({
                     href={`/rides/${r.id}`}
                     className={`block rounded px-1.5 py-1 text-xs border truncate hover:opacity-80 transition-opacity ${statusColor[r.status] ?? "bg-slate-100 text-slate-600"}`}
                   >
-                    {r.scheduledAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} {r.client.firstName} {r.client.lastName[0]}.
+                    {r.scheduledAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" "}
+                    {r.requestedName ?? `${r.client.firstName} ${r.client.lastName[0]}.`}
                   </Link>
                 ))}
                 {dayRides.length === 0 && <div className="text-xs text-slate-300 text-center pt-2">—</div>}
