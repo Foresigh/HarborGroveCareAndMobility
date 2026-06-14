@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { ConfirmRideButton } from "@/components/confirm-ride-button";
 
 const statusColor: Record<string, string> = {
   SCHEDULED: "bg-blue-100 text-blue-700 border-blue-200",
@@ -78,14 +79,18 @@ export default async function CalendarPage({
               </div>
               <div className="space-y-1">
                 {dayRides.map((r) => (
-                  <Link
+                  <div
                     key={r.id}
-                    href={`/rides/${r.id}`}
-                    className={`block rounded px-1.5 py-1 text-xs border truncate hover:opacity-80 transition-opacity ${statusColor[r.status] ?? "bg-slate-100 text-slate-600"}`}
+                    className={`rounded px-1.5 py-1 text-xs border ${statusColor[r.status] ?? "bg-slate-100 text-slate-600"}`}
                   >
-                    {r.scheduledAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" "}
-                    {r.requestedName ?? `${r.client.firstName} ${r.client.lastName[0]}.`}
-                  </Link>
+                    <Link href={`/rides/${r.id}`} className="block truncate hover:opacity-70 transition-opacity">
+                      {r.scheduledAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" "}
+                      {r.requestedName ?? `${r.client.firstName} ${r.client.lastName[0]}.`}
+                    </Link>
+                    {r.status === "SCHEDULED" && (
+                      <ConfirmRideButton rideId={r.id} alreadyConfirmed={!!r.confirmedAt} />
+                    )}
+                  </div>
                 ))}
                 {dayRides.length === 0 && <div className="text-xs text-slate-300 text-center pt-2">—</div>}
               </div>
