@@ -30,11 +30,19 @@ export async function POST(req: NextRequest) {
 
     // Find or create client by phone — always use the name submitted in the form
     let client = await prisma.client.findFirst({ where: { phone } });
+    let nameChanged = false;
+    let previousName = "";
     if (!client) {
       client = await prisma.client.create({
         data: { firstName, lastName, phone, mobilityNeeds: mobility || null, billingType: "PRIVATE_PAY" },
       });
     } else {
+      const existingName = `${client.firstName} ${client.lastName}`.trim();
+      const submittedName = `${firstName} ${lastName}`.trim();
+      if (existingName.toLowerCase() !== submittedName.toLowerCase()) {
+        nameChanged = true;
+        previousName = existingName;
+      }
       client = await prisma.client.update({
         where: { id: client.id },
         data: { firstName, lastName, mobilityNeeds: mobility || client.mobilityNeeds },
@@ -53,7 +61,7 @@ export async function POST(req: NextRequest) {
         scheduledAt,
         rideType: mobilityToRideType(mobility || ""),
         billingType: "PRIVATE_PAY",
-        notes: notes || null,
+        notes: [notes, nameChanged ? `⚠️ Name changed from "${previousName}" to "${firstName} ${lastName}"` : null].filter(Boolean).join("\n") || null,
         status: "SCHEDULED",
       },
     });
