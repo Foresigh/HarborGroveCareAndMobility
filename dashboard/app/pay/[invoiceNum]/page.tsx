@@ -26,9 +26,9 @@ export default async function PayPage({ params }: { params: Promise<{ invoiceNum
     ? `${invoice.client.firstName} ${invoice.client.lastName}`
     : null;
 
-  // Create a Stripe Checkout session if one doesn't exist yet
-  let stripeUrl = invoice.stripeUrl;
-  if (!isPaid && !stripeUrl && process.env.STRIPE_SECRET_KEY) {
+  // Always create a fresh Stripe Checkout session — saved URLs expire after 24 hours
+  let stripeUrl: string | null = null;
+  if (!isPaid && process.env.STRIPE_SECRET_KEY) {
     try {
       const session = await getStripe().checkout.sessions.create({
         mode: "payment",
@@ -50,10 +50,6 @@ export default async function PayPage({ params }: { params: Promise<{ invoiceNum
         cancel_url: `${APP_URL}/pay/${invoiceNum}`,
       });
       stripeUrl = session.url;
-      await prisma.invoice.update({
-        where: { id: invoice.id },
-        data: { stripeId: session.id, stripeUrl: session.url },
-      });
     } catch (err) {
       console.error("Stripe session creation failed for", invoiceNum, err);
     }
