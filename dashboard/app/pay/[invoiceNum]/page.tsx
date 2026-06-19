@@ -1,6 +1,13 @@
 export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import Stripe from "stripe";
+
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://dashboard.harborgrovecareandmobility.com").replace(/\/$/, "");
+
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-05-27.dahlia" });
+}
 
 export default async function PayPage({ params }: { params: Promise<{ invoiceNum: string }> }) {
   const { invoiceNum } = await params;
@@ -19,14 +26,46 @@ export default async function PayPage({ params }: { params: Promise<{ invoiceNum
     ? `${invoice.client.firstName} ${invoice.client.lastName}`
     : null;
 
+  // Create a Stripe Checkout session if one doesn't exist yet
+  let stripeUrl = invoice.stripeUrl;
+  if (!isPaid && !stripeUrl && process.env.STRIPE_SECRET_KEY) {
+    try {
+      const session = await getStripe().checkout.sessions.create({
+        mode: "payment",
+        line_items: [{
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `Invoice ${invoiceNum} — Harbor Grove Care & Mobility`,
+              description: item?.description ?? undefined,
+            },
+            unit_amount: Math.round(total * 100),
+          },
+          quantity: 1,
+        }],
+        metadata: { invoiceId: invoice.id, invoiceNum: invoice.invoiceNum },
+        payment_intent_data: { metadata: { invoiceId: invoice.id, invoiceNum: invoice.invoiceNum } },
+        customer_email: invoice.client?.email ?? undefined,
+        success_url: `${APP_URL}/payments/success?invoice=${invoiceNum}`,
+        cancel_url: `${APP_URL}/pay/${invoiceNum}`,
+      });
+      stripeUrl = session.url;
+      await prisma.invoice.update({
+        where: { id: invoice.id },
+        data: { stripeId: session.id, stripeUrl: session.url },
+      });
+    } catch (err) {
+      console.error("Stripe session creation failed for", invoiceNum, err);
+    }
+  }
+
   return (
     <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", background: "#f1f5f9", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", maxWidth: 420, width: "100%", overflow: "hidden" }}>
 
         {/* Header */}
         <div style={{ background: "#0D2B4E", padding: "28px 32px 24px", textAlign: "center" }}>
-          <div style={{ color: "#F9A825", fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>Harbor Grove</div>
-          <div style={{ color: "#fff", fontSize: 18, fontWeight: 700, marginTop: 4 }}>Care &amp; Mobility</div>
+          <img src={`${APP_URL}/logo-white.svg`} alt="Harbor Grove Care & Mobility" style={{ height: 44, display: "block", margin: "0 auto" }} />
         </div>
 
         {/* Body */}
@@ -69,9 +108,9 @@ export default async function PayPage({ params }: { params: Promise<{ invoiceNum
               <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
               Payment Complete — Thank you!
             </div>
-          ) : invoice.stripeUrl ? (
+          ) : stripeUrl ? (
             <>
-              <a href={invoice.stripeUrl} style={{ display: "block", width: "100%", background: "#F9A825", color: "#0D2B4E", fontSize: 16, fontWeight: 800, border: "none", borderRadius: 12, padding: 16, cursor: "pointer", textDecoration: "none", textAlign: "center", marginTop: 28, boxSizing: "border-box" }}>
+              <a href={stripeUrl} style={{ display: "block", width: "100%", background: "#F9A825", color: "#0D2B4E", fontSize: 16, fontWeight: 800, border: "none", borderRadius: 12, padding: 16, cursor: "pointer", textDecoration: "none", textAlign: "center", marginTop: 28, boxSizing: "border-box" }}>
                 Pay ${total.toFixed(2)} Securely
               </a>
               <div style={{ textAlign: "center", fontSize: 11, color: "#94a3b8", marginTop: 12 }}>
@@ -79,8 +118,8 @@ export default async function PayPage({ params }: { params: Promise<{ invoiceNum
               </div>
             </>
           ) : (
-            <div style={{ marginTop: 28, padding: 16, background: "#fef9ec", borderRadius: 12, fontSize: 14, color: "#92400e", textAlign: "center" }}>
-              Payment link is no longer active. Please contact us.
+            <div style={{ marginTop: 28, padding: 16, background: "#f1f5f9", borderRadius: 12, fontSize: 14, color: "#64748b", textAlign: "center" }}>
+              Payment unavailable. Please call us at 208-206-0694.
             </div>
           )}
         </div>
