@@ -26,7 +26,6 @@ export async function POST(
 
   const billToName = invoice.facility?.name ?? (invoice.client ? `${invoice.client.firstName} ${invoice.client.lastName}` : "");
   const payUrl = `${APP_URL}/pay/${invoice.invoiceNum}`;
-  const isPrivatePay = !invoice.facilityId;
 
   // Trip rows
   const tripRows = invoice.items.map((item) => `
@@ -148,14 +147,13 @@ export async function POST(
     </div>
   </td></tr>
 
-  ${isPrivatePay ? `
   <!-- Pay Now Button -->
   <tr><td style="padding:24px 40px;text-align:center;border-bottom:1px solid #f1f5f9;">
     <a href="${payUrl}" style="display:inline-block;background:#0D2B4E;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:10px;text-decoration:none;letter-spacing:0.01em;">
       Pay Now — $${Number(invoice.total).toFixed(2)} →
     </a>
     <div style="margin-top:10px;font-size:11px;color:#94a3b8;">Secure payment powered by Stripe</div>
-  </td></tr>` : ""}
+  </td></tr>
 
   <!-- Footer -->
   <tr><td style="padding:16px 40px 24px;text-align:center;font-size:11px;color:#94a3b8;">
