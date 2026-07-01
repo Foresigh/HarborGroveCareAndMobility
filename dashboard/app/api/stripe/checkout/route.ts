@@ -9,7 +9,7 @@ function getStripe() {
 
 const DEFAULTS: Record<string, string> = {
   AMBULATORY_RATE: "35", WHEELCHAIR_RATE: "45", STRETCHER_RATE: "145",
-  MILEAGE_RATE: "3.65", INCLUDED_MILES: "10",
+  MILEAGE_RATE: "3.65", INCLUDED_MILES: "0",
 };
 
 function invoiceNum() {
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
   const n = (k: string, d: number) => { const x = Number(s[k]); return isNaN(x) ? d : x; };
   const mileageRate   = n("MILEAGE_RATE", 3.65);
-  const includedMiles = n("INCLUDED_MILES", 10);
+  const includedMiles = n("INCLUDED_MILES", 0);
 
   const base    = Math.max(0, Number(customRate) || 0);
   const totalMi = (miles !== null && miles !== undefined && miles !== "") ? Math.max(0, Number(miles) || 0) : 0;

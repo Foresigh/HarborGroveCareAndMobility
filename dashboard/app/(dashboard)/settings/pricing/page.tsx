@@ -24,7 +24,7 @@ export default function PricingSettingsPage() {
     WHEELCHAIR_RATE: "45",
     STRETCHER_RATE: "145",
     MILEAGE_RATE: "3.65",
-    INCLUDED_MILES: "10",
+    INCLUDED_MILES: "0",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -91,9 +91,15 @@ export default function PricingSettingsPage() {
               <div className="bg-[#FEF9EC] rounded-lg p-4 text-xs text-slate-600 space-y-1 mb-5">
                 <div className="font-semibold text-slate-700 mb-1">How pricing works</div>
                 <div>• Round trips = base rate × 2</div>
-                <div>• First <strong>{settings.INCLUDED_MILES} miles</strong> included free per one-way trip</div>
-                <div>• Round trips get the {settings.INCLUDED_MILES}-mile credit only once (going leg)</div>
-                <div>• Billable miles = total miles − included miles, billed at ${settings.MILEAGE_RATE}/mi</div>
+                {Number(settings.INCLUDED_MILES) > 0 ? (
+                  <>
+                    <div>• First <strong>{settings.INCLUDED_MILES} miles</strong> included free per one-way trip</div>
+                    <div>• Round trips get the {settings.INCLUDED_MILES}-mile credit only once (going leg)</div>
+                    <div>• Billable miles = total miles − included miles, billed at ${settings.MILEAGE_RATE}/mi</div>
+                  </>
+                ) : (
+                  <div>• Every mile billed at ${settings.MILEAGE_RATE}/mi from the first mile (no free miles)</div>
+                )}
               </div>
               <button type="submit" disabled={saving}
                 className="bg-[#0D2B4E] hover:bg-[#0a2240] text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition disabled:opacity-60">

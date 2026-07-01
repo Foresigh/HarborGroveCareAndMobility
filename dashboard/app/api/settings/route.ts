@@ -6,7 +6,7 @@ const DEFAULTS: Record<string, string> = {
   WHEELCHAIR_RATE: "45",
   STRETCHER_RATE: "145",
   MILEAGE_RATE: "3.65",
-  INCLUDED_MILES: "10",
+  INCLUDED_MILES: "0",
 };
 
 export async function GET() {

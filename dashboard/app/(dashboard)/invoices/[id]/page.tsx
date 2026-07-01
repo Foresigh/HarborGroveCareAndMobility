@@ -20,7 +20,7 @@ interface InvoiceDetail {
 }
 
 interface Rates { AMBULATORY_RATE: number; WHEELCHAIR_RATE: number; STRETCHER_RATE: number; MILEAGE_RATE: number; INCLUDED_MILES: number; }
-const DEFAULT_RATES: Rates = { AMBULATORY_RATE: 35, WHEELCHAIR_RATE: 45, STRETCHER_RATE: 145, MILEAGE_RATE: 3.65, INCLUDED_MILES: 10 };
+const DEFAULT_RATES: Rates = { AMBULATORY_RATE: 35, WHEELCHAIR_RATE: 45, STRETCHER_RATE: 145, MILEAGE_RATE: 3.65, INCLUDED_MILES: 0 };
 
 function pricingBreakdown(items: TripItem[], rates: Rates) {
   const rateMap: Record<string, number> = { AMBULATORY: rates.AMBULATORY_RATE, WHEELCHAIR: rates.WHEELCHAIR_RATE, STRETCHER: rates.STRETCHER_RATE };
@@ -64,7 +64,7 @@ export default function InvoiceDetailPage() {
         WHEELCHAIR_RATE: n(s.WHEELCHAIR_RATE, 45),
         STRETCHER_RATE:  n(s.STRETCHER_RATE, 145),
         MILEAGE_RATE:    n(s.MILEAGE_RATE, 3.65),
-        INCLUDED_MILES:  n(s.INCLUDED_MILES, 10),
+        INCLUDED_MILES:  n(s.INCLUDED_MILES, 0),
       });
     });
   }, [id]);
@@ -341,7 +341,9 @@ export default function InvoiceDetailPage() {
           {/* Mileage note + notes */}
           <div style={{ padding: "12px 40px", borderBottom: "1px solid #f1f5f9", background: "#fafbfc" }}>
             <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.6 }}>
-              <strong style={{ color: "#64748b" }}>How mileage is calculated:</strong> One-way trips: first {rates.INCLUDED_MILES} miles included per trip. Round trips: first {rates.INCLUDED_MILES} miles included only once when going to the facility; return mileage receives no additional {rates.INCLUDED_MILES}-mile discount. Mileage rate: ${rates.MILEAGE_RATE}/mi.
+              <strong style={{ color: "#64748b" }}>How mileage is calculated:</strong> {rates.INCLUDED_MILES > 0
+                ? `One-way trips: first ${rates.INCLUDED_MILES} miles included per trip. Round trips: first ${rates.INCLUDED_MILES} miles included only once when going to the facility; return mileage receives no additional ${rates.INCLUDED_MILES}-mile discount. Mileage rate: $${rates.MILEAGE_RATE}/mi.`
+                : `Every mile is billed at $${rates.MILEAGE_RATE}/mi from the first mile. Round trips charge the base rate twice.`}
             </div>
           </div>
 

@@ -75,7 +75,7 @@ function ChargeForm({ clientSecret, invoiceNum, total, onSuccess }: {
 export default function QuickPaymentPage() {
   const router = useRouter();
 
-  const [rates, setRates]         = useState<Rates>({ AMBULATORY_RATE: 35, WHEELCHAIR_RATE: 45, STRETCHER_RATE: 145, MILEAGE_RATE: 3.65, INCLUDED_MILES: 10 });
+  const [rates, setRates]         = useState<Rates>({ AMBULATORY_RATE: 35, WHEELCHAIR_RATE: 45, STRETCHER_RATE: 145, MILEAGE_RATE: 3.65, INCLUDED_MILES: 0 });
   const [clients, setClients]     = useState<Client[]>([]);
   const [tab, setTab]             = useState<Tab>("charge");
 
@@ -109,7 +109,7 @@ export default function QuickPaymentPage() {
       const loaded: Rates = {
         AMBULATORY_RATE: n(d.AMBULATORY_RATE, 35), WHEELCHAIR_RATE: n(d.WHEELCHAIR_RATE, 45),
         STRETCHER_RATE: n(d.STRETCHER_RATE, 145), MILEAGE_RATE: n(d.MILEAGE_RATE, 3.65),
-        INCLUDED_MILES: n(d.INCLUDED_MILES, 10),
+        INCLUDED_MILES: n(d.INCLUDED_MILES, 0),
       };
       setRates(loaded);
       setCustomRate(String(loaded.AMBULATORY_RATE));
@@ -266,7 +266,7 @@ export default function QuickPaymentPage() {
         <div>
           <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Total Miles</label>
           <div className="flex items-center gap-2">
-            <input type="number" min="0" step="0.1" placeholder="0" value={miles} onChange={e => setMiles(e.target.value)}
+            <input type="number" min="0" step="0.01" placeholder="0" value={miles} onChange={e => setMiles(e.target.value)}
               className="border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#F9A825] w-32" />
             <span className="text-sm text-slate-400">miles</span>
           </div>

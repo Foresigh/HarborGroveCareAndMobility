@@ -4,9 +4,6 @@ import { Resend } from "resend";
 
 const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://dashboard.harborgrovecareandmobility.com").replace(/\/$/, "");
 const FROM = process.env.RESEND_FROM ?? "Harbor Grove Care & Mobility <noreply@harborgrovecareandmobility.com>";
-const SERVICE_RATES: Record<string, number> = { AMBULATORY: 35, WHEELCHAIR: 45, STRETCHER: 145 };
-const MILEAGE_RATE = 3.65;
-const INCLUDED_MILES = 10;
 
 export async function POST(
   _req: Request,
@@ -20,6 +17,19 @@ export async function POST(
   });
 
   if (!invoice) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Load pricing settings (fall back to defaults) so the emailed breakdown matches the dashboard
+  const settingRows = await prisma.setting.findMany();
+  const cfg: Record<string, string> = {};
+  for (const r of settingRows) cfg[r.key] = r.value;
+  const num = (k: string, d: number) => { const x = Number(cfg[k]); return isNaN(x) ? d : x; };
+  const MILEAGE_RATE = num("MILEAGE_RATE", 3.65);
+  const INCLUDED_MILES = num("INCLUDED_MILES", 0);
+  const SERVICE_RATES: Record<string, number> = {
+    AMBULATORY: num("AMBULATORY_RATE", 35),
+    WHEELCHAIR: num("WHEELCHAIR_RATE", 45),
+    STRETCHER: num("STRETCHER_RATE", 145),
+  };
 
   const toEmail = invoice.facility?.email ?? invoice.client?.email;
   if (!toEmail) return NextResponse.json({ error: "No email address on file for this client or facility" }, { status: 400 });

@@ -53,7 +53,7 @@ export default function EditInvoicePage() {
   const [notes, setNotes] = useState("");
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState<"FLAT" | "PERCENT">("FLAT");
-  const [rates, setRates] = useState<Rates>({ AMBULATORY_RATE: 35, WHEELCHAIR_RATE: 45, STRETCHER_RATE: 145, MILEAGE_RATE: 3.65, INCLUDED_MILES: 10 });
+  const [rates, setRates] = useState<Rates>({ AMBULATORY_RATE: 35, WHEELCHAIR_RATE: 45, STRETCHER_RATE: 145, MILEAGE_RATE: 3.65, INCLUDED_MILES: 0 });
   const [invoiceNum, setInvoiceNum] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -72,7 +72,7 @@ export default function EditInvoicePage() {
         WHEELCHAIR_RATE: Number(s.WHEELCHAIR_RATE) || 45,
         STRETCHER_RATE: Number(s.STRETCHER_RATE) || 145,
         MILEAGE_RATE: Number(s.MILEAGE_RATE) || 3.65,
-        INCLUDED_MILES: Number(s.INCLUDED_MILES) || 10,
+        INCLUDED_MILES: Number(s.INCLUDED_MILES) || 0,
       });
 
       setInvoiceNum(inv.invoiceNum);
@@ -242,7 +242,7 @@ export default function EditInvoicePage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-slate-700">Trip Detail Log</h2>
             <div className="text-xs text-slate-400">
-              Amb ${rates.AMBULATORY_RATE} · W/C ${rates.WHEELCHAIR_RATE} · Str ${rates.STRETCHER_RATE} · +${rates.MILEAGE_RATE}/mi after {rates.INCLUDED_MILES}mi
+              Amb ${rates.AMBULATORY_RATE} · W/C ${rates.WHEELCHAIR_RATE} · Str ${rates.STRETCHER_RATE} · +${rates.MILEAGE_RATE}/mi{rates.INCLUDED_MILES > 0 ? ` after ${rates.INCLUDED_MILES}mi` : ""}
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -273,7 +273,7 @@ export default function EditInvoicePage() {
                         <option value="ROUND_TRIP">Round Trip</option>
                       </select>
                     </td>
-                    <td className="px-2 py-2"><input type="number" min="0" step="0.1" value={trip.miles} onChange={(e) => updateTrip(i, "miles", e.target.value)} placeholder="0" className="border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#F9A825] w-20" /></td>
+                    <td className="px-2 py-2"><input type="number" min="0" step="0.01" value={trip.miles} onChange={(e) => updateTrip(i, "miles", e.target.value)} placeholder="0" className="border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#F9A825] w-20" /></td>
                     <td className="px-2 py-2 text-center"><input type="checkbox" checked={trip.ownWheelchair} onChange={(e) => updateTrip(i, "ownWheelchair", e.target.checked)} className="rounded" /></td>
                     <td className="px-2 py-2 text-center"><input type="checkbox" checked={trip.needsO2} onChange={(e) => updateTrip(i, "needsO2", e.target.checked)} className="rounded" /></td>
                     <td className="px-2 py-2"><input type="number" value={trip.weight} onChange={(e) => updateTrip(i, "weight", e.target.value)} placeholder="lbs" className="border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#F9A825] w-16" /></td>
